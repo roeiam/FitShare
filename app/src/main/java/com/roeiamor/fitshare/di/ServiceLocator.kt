@@ -8,10 +8,13 @@ import com.roeiamor.fitshare.data.remote.AuthDataSource
 import com.roeiamor.fitshare.data.remote.CloudinaryApi
 import com.roeiamor.fitshare.data.remote.CloudinaryImageUploader
 import com.roeiamor.fitshare.data.remote.ImageUploader
+import com.roeiamor.fitshare.data.remote.InteractionDataSource
 import com.roeiamor.fitshare.data.remote.UserDataSource
 import com.roeiamor.fitshare.data.remote.WorkoutDataSource
 import com.roeiamor.fitshare.data.repository.AuthRepository
 import com.roeiamor.fitshare.data.repository.AuthRepositoryImpl
+import com.roeiamor.fitshare.data.repository.InteractionRepository
+import com.roeiamor.fitshare.data.repository.InteractionRepositoryImpl
 import com.roeiamor.fitshare.data.repository.WorkoutRepository
 import com.roeiamor.fitshare.data.repository.WorkoutRepositoryImpl
 import com.roeiamor.fitshare.util.ImageCompressor
@@ -55,6 +58,10 @@ object ServiceLocator {
     private val userDataSource: UserDataSource by lazy { UserDataSource(firestore) }
 
     private val workoutDataSource: WorkoutDataSource by lazy { WorkoutDataSource(firestore) }
+
+    private val interactionDataSource: InteractionDataSource by lazy {
+        InteractionDataSource(firestore)
+    }
 
     // ---- Cloudinary ------------------------------------------------------------------------
 
@@ -110,10 +117,25 @@ object ServiceLocator {
         WorkoutRepositoryImpl(workoutDataSource, userDataSource, authDataSource, imageUploader)
     }
 
-    /** The single factory every Fragment uses to obtain its ViewModel. */
-    val viewModelFactory: ViewModelFactory by lazy {
-        ViewModelFactory(authRepository, workoutRepository)
+    /** Likes, comments and favourites for the signed-in user. */
+    val interactionRepository: InteractionRepository by lazy {
+        InteractionRepositoryImpl(interactionDataSource, userDataSource, authDataSource)
     }
+
+    /** The factory for screens that need no arguments. */
+    val viewModelFactory: ViewModelFactory by lazy {
+        ViewModelFactory(authRepository, workoutRepository, interactionRepository)
+    }
+
+    /**
+     * The factory for screens that are *about* a particular workout - the details screen, and the
+     * add form when it is editing.
+     *
+     * Not a `by lazy` singleton like the one above, because the argument differs per screen. Built
+     * fresh each time, which is cheap: a factory holds references, not state.
+     */
+    fun viewModelFactory(workoutId: String?): ViewModelFactory =
+        ViewModelFactory(authRepository, workoutRepository, interactionRepository, workoutId)
 
     // ---- Lifecycle -------------------------------------------------------------------------
 

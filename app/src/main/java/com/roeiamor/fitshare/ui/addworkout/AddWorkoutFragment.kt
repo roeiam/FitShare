@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Difficulty
 import com.roeiamor.fitshare.data.model.WorkoutCategory
@@ -34,7 +35,12 @@ import com.roeiamor.fitshare.util.showSnackbar
  */
 class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
 
-    private val viewModel: AddWorkoutViewModel by viewModels { ServiceLocator.viewModelFactory }
+    /** Null when publishing something new, a real id when editing an existing workout. */
+    private val args: AddWorkoutFragmentArgs by navArgs()
+
+    private val viewModel: AddWorkoutViewModel by viewModels {
+        ServiceLocator.viewModelFactory(args.workoutId)
+    }
 
     /**
      * The system photo picker.
@@ -204,6 +210,18 @@ class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
     private fun observeViewModel() {
         viewModel.uiState.observe(viewLifecycleOwner) { render(it) }
 
+        // Fires once, when an existing workout has loaded. Setting the text calls back into the
+        // ViewModel through the watchers, which is fine - the values are identical - but it must
+        // not be re-delivered, or a rotation would overwrite anything typed since.
+        viewModel.prefill.observe(viewLifecycleOwner) { event ->
+            val draft = event.getContentIfNotHandled() ?: return@observe
+            binding.titleInput.setText(draft.title)
+            binding.descriptionInput.setText(draft.description)
+            binding.durationInput.setText(draft.durationMinutes.toString())
+            binding.categoryChips.check(CATEGORY_CHIP_BASE_ID + WorkoutCategory.entries.indexOf(draft.category))
+            binding.difficultyChips.check(DIFFICULTY_CHIP_BASE_ID + Difficulty.entries.indexOf(draft.difficulty))
+        }
+
         viewModel.message.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let { showSnackbar(it) }
         }
@@ -216,7 +234,17 @@ class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
 
     /** Draws one state: the photo, the three inline errors, and the upload progress. */
     private fun render(state: AddWorkoutUiState) {
-        binding.workoutImage.loadWorkoutImage(state.imageUri?.toString())
+        // A newly picked photo wins; otherwise the one the workout already has, when editing.
+        binding.workoutImage.loadWorkoutImage(
+            state.imageUri?.toString() ?: state.existingImageUrl
+        )
+
+        binding.screenTitle.setText(
+            if (viewModel.isEditing) R.string.details_edit_title else R.string.add_title
+        )
+        binding.publishWorkout.setText(
+            if (viewModel.isEditing) R.string.details_edit_save else R.string.add_publish
+        )
 
         binding.titleLayout.error = state.titleError?.let(::getString)
         binding.descriptionLayout.error = state.descriptionError?.let(::getString)

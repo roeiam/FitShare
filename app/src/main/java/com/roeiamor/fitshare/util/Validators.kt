@@ -115,6 +115,19 @@ object Validators {
         }
     }
 
+    private const val MAX_COMMENT_LENGTH = 300
+
+    /** Checks a comment: required, and at most 300 characters (SPEC section 3). */
+    @StringRes
+    fun validateComment(text: String): Int? {
+        val trimmed = text.trim()
+        return when {
+            trimmed.isEmpty() -> R.string.error_required_field
+            trimmed.length > MAX_COMMENT_LENGTH -> R.string.error_comment_length
+            else -> null
+        }
+    }
+
     /**
      * A deliberately ordinary email pattern: some characters, an @, a domain, a dot, a suffix of at
      * least two letters. It is not RFC 5322 - no client-side regex usefully is - and it does not

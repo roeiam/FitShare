@@ -79,6 +79,12 @@
     <string name="details_delete">Delete</string>
     <string name="details_delete_confirm">Delete this workout? This cannot be undone.</string>
     <string name="details_comment_delete_confirm">Delete this comment?</string>
+    <string name="details_deleted_title">This workout was deleted</string>
+    <string name="details_deleted_body">Its owner removed it</string>
+    <string name="details_share_text">"%1$s by %2$s · %3$s\n\nShared from FitShare"</string>
+    <string name="details_edit_title">Edit workout</string>
+    <string name="details_edit_save">Save changes</string>
+    <string name="details_edit_saved">Workout updated</string>
 
     <!-- Favorites -->
     <string name="favorites_title">Favorites</string>
@@ -180,6 +186,7 @@
     <string name="cd_avatar">Profile photo</string>
     <string name="cd_workout_image">Workout photo</string>
     <string name="cd_like">Like</string>
+    <string name="cd_like_remove">Remove like</string>
     <string name="cd_comments">Comments</string>
     <string name="cd_favorite">Save to favorites</string>
     <string name="cd_share">Share</string>

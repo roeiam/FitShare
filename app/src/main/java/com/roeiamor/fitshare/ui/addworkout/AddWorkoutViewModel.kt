@@ -30,6 +30,8 @@ import kotlinx.coroutines.launch
  */
 data class AddWorkoutUiState(
     val imageUri: Uri? = null,
+    /** The photo the workout already has, when editing. Shown until a new one is picked. */
+    val existingImageUrl: String? = null,
     @StringRes val titleError: Int? = null,
     @StringRes val descriptionError: Int? = null,
     @StringRes val durationError: Int? = null,
@@ -48,7 +50,65 @@ data class AddWorkoutUiState(
  *
  * @param workoutRepository uploads the photo and writes the workout with its author's counter.
  */
-class AddWorkoutViewModel(private val workoutRepository: WorkoutRepository) : ViewModel() {
+class AddWorkoutViewModel(
+    private val workoutRepository: WorkoutRepository,
+    private val editingWorkoutId: String?
+) : ViewModel() {
+
+    /** True when this screen is editing an existing workout rather than publishing a new one. */
+    val isEditing: Boolean get() = editingWorkoutId != null
+
+    private val _prefill = MutableLiveData<Event<WorkoutDraft>>()
+
+    /**
+     * Fires once when an existing workout has loaded, so the Fragment can fill the fields.
+     *
+     * A one-shot event rather than state: the Fragment writes the values into `EditText`s, which
+     * calls back into `onTitleChanged` and friends. Re-delivering it - on rotation, say - would
+     * overwrite whatever the user had since typed with the original values.
+     */
+    val prefill: LiveData<Event<WorkoutDraft>> = _prefill
+
+    init {
+        if (editingWorkoutId != null) loadExistingWorkout(editingWorkoutId)
+    }
+
+    /** Loads the workout being edited and asks the Fragment to fill the form with it. */
+    private fun loadExistingWorkout(workoutId: String) {
+        viewModelScope.launch {
+            _uiState.value = currentState().copy(isUploading = true)
+
+            workoutRepository.getWorkout(workoutId)
+                .onSuccess { workout ->
+                    if (workout == null) {
+                        _message.value = Event(R.string.error_generic)
+                        return@onSuccess
+                    }
+                    title = workout.title
+                    description = workout.description
+                    durationText = workout.durationMinutes.toString()
+
+                    val draft = WorkoutDraft(
+                        title = workout.title,
+                        description = workout.description,
+                        category = WorkoutCategory.fromName(workout.category),
+                        durationMinutes = workout.durationMinutes,
+                        difficulty = Difficulty.fromName(workout.difficulty)
+                    )
+                    _uiState.value = currentState().copy(
+                        selectedCategory = draft.category,
+                        selectedDifficulty = draft.difficulty,
+                        existingImageUrl = workout.imageUrl
+                    )
+                    _prefill.value = Event(draft)
+                    revalidate()
+                }
+                .onFailure {
+                    _message.value = Event(ErrorMapper.toMessageRes(it))
+                    revalidate()
+                }
+        }
+    }
 
     private val _uiState = MutableLiveData(AddWorkoutUiState())
 
@@ -126,9 +186,19 @@ class AddWorkoutViewModel(private val workoutRepository: WorkoutRepository) : Vi
         viewModelScope.launch {
             _uiState.value = state.copy(isUploading = true, isSubmitEnabled = false)
 
-            workoutRepository.createWorkout(draft, state.imageUri)
+            // Editing updates only the fields this form owns, so the counters, the author and
+            // createdAt survive. Publishing writes a new document and moves workoutsCount.
+            val result = if (editingWorkoutId == null) {
+                workoutRepository.createWorkout(draft, state.imageUri)
+            } else {
+                workoutRepository.updateWorkout(editingWorkoutId, draft, state.imageUri)
+            }
+
+            result
                 .onSuccess {
-                    _message.value = Event(R.string.add_success)
+                    _message.value = Event(
+                        if (isEditing) R.string.details_edit_saved else R.string.add_success
+                    )
                     _navigateToFeed.value = Event(Unit)
                 }
                 .onFailure {

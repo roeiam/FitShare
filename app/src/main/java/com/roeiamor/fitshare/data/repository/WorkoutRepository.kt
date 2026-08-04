@@ -43,6 +43,20 @@ interface WorkoutRepository {
      * @param imageUri the chosen photo, or null - a workout without one is valid.
      */
     suspend fun createWorkout(draft: WorkoutDraft, imageUri: Uri?): Result<Unit>
+
+    /** Watches one workout, so the details screen reflects likes and comments as they happen. */
+    fun observeWorkout(id: String): Flow<Result<Workout?>>
+
+    /**
+     * Deletes a workout and decrements its author's counter.
+     *
+     * @param workout the workout to delete; the author is taken from it rather than from the
+     *   session, so the two can be compared before anything is written.
+     */
+    suspend fun deleteWorkout(workout: Workout): Result<Unit>
+
+    /** Updates the fields the add/edit form owns, leaving counters and timestamps alone. */
+    suspend fun updateWorkout(workoutId: String, draft: WorkoutDraft, imageUri: Uri?): Result<Unit>
 }
 
 /**
@@ -71,6 +85,61 @@ class WorkoutRepositoryImpl(
 
     override suspend fun getWorkout(id: String): Result<Workout?> =
         workoutDataSource.getWorkout(id)
+
+    override fun observeWorkout(id: String): Flow<Result<Workout?>> =
+        workoutDataSource.observeWorkout(id)
+
+    /**
+     * Refuses to delete somebody else's workout.
+     *
+     * The security rules enforce this on the server too, and the UI only offers delete to the owner
+     * - but a check here means a bug in either of those cannot turn into a lost document, and the
+     * failure is a clear message rather than a permission error from Firestore.
+     */
+    override suspend fun deleteWorkout(workout: Workout): Result<Unit> {
+        val userId = authDataSource.currentUserId
+        if (userId == null || userId != workout.authorId) {
+            return Result.failure(IllegalStateException("Only the author can delete a workout"))
+        }
+        return workoutDataSource.deleteWorkout(workout.id, workout.authorId)
+    }
+
+    /**
+     * Applies an edit.
+     *
+     * A new photo is uploaded first, exactly as on create. When [imageUri] is null the existing
+     * `imageUrl` is left untouched - the field is simply not part of the update - so editing the
+     * title of a workout does not silently remove its photo.
+     */
+    override suspend fun updateWorkout(
+        workoutId: String,
+        draft: WorkoutDraft,
+        imageUri: Uri?
+    ): Result<Unit> {
+        val fields = mutableMapOf<String, Any?>(
+            FIELD_TITLE to draft.title.trim(),
+            FIELD_DESCRIPTION to draft.description.trim(),
+            FIELD_CATEGORY to draft.category.name,
+            FIELD_DURATION to draft.durationMinutes,
+            FIELD_DIFFICULTY to draft.difficulty.name
+        )
+
+        if (imageUri != null) {
+            val imageUrl = imageUploader.upload(imageUri).getOrElse { return Result.failure(it) }
+            fields[FIELD_IMAGE_URL] = imageUrl
+        }
+
+        return workoutDataSource.updateWorkout(workoutId, fields)
+    }
+
+    private companion object {
+        const val FIELD_TITLE = "title"
+        const val FIELD_DESCRIPTION = "description"
+        const val FIELD_CATEGORY = "category"
+        const val FIELD_DURATION = "durationMinutes"
+        const val FIELD_DIFFICULTY = "difficulty"
+        const val FIELD_IMAGE_URL = "imageUrl"
+    }
 
     /**
      * Publishing, in four steps that stop at the first failure.

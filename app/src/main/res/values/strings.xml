@@ -76,6 +76,13 @@
     <string name="details_delete">מחיקה</string>
     <string name="details_delete_confirm">למחוק את האימון? הפעולה אינה הפיכה.</string>
     <string name="details_comment_delete_confirm">למחוק את התגובה?</string>
+    <string name="details_deleted_title">האימון נמחק</string>
+    <string name="details_deleted_body">בעל האימון הסיר אותו</string>
+    <!-- %1$s title, %2$s author, %3$s duration -->
+    <string name="details_share_text">"%1$s מאת %2$s · %3$s\n\nשותף מ־FitShare"</string>
+    <string name="details_edit_title">עריכת אימון</string>
+    <string name="details_edit_save">שמירת שינויים</string>
+    <string name="details_edit_saved">האימון עודכן</string>
 
     <!-- Favorites -->
     <string name="favorites_title">מועדפים</string>
@@ -183,6 +190,7 @@
     <string name="cd_avatar">תמונת פרופיל</string>
     <string name="cd_workout_image">תמונת האימון</string>
     <string name="cd_like">לייק</string>
+    <string name="cd_like_remove">ביטול לייק</string>
     <string name="cd_comments">תגובות</string>
     <string name="cd_favorite">שמירה למועדפים</string>
     <string name="cd_share">שיתוף</string>

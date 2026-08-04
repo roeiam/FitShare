@@ -95,6 +95,64 @@ class WorkoutDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
+     * Watches one workout.
+     *
+     * The details screen needs this rather than a one-off read: a like or a comment from another
+     * device changes the counters, and the screen has to show that without being reopened.
+     *
+     * Emits null when the document is gone, which is how the screen learns the owner deleted it
+     * from somewhere else.
+     */
+    fun observeWorkout(id: String): Flow<Result<Workout?>> = callbackFlow {
+        val registration = workoutsCollection.document(id)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                trySend(Result.success(snapshot?.toObject(Workout::class.java)))
+            }
+
+        awaitClose { registration.remove() }
+    }
+
+    /**
+     * Deletes a workout and decrements its author's `workoutsCount`, atomically.
+     *
+     * The mirror image of [createWorkout], and atomic for the same reason: split in two, a failure
+     * between them leaves the profile counting a workout that no longer exists.
+     *
+     * The likes and comments subcollections are **not** deleted. Firestore does not cascade, and
+     * deleting them from the client would mean reading and removing every document one by one -
+     * slow, and impossible to make atomic with the parent. They become unreachable orphans instead,
+     * which costs a little storage and nothing else. Noted in the README as a known limitation; the
+     * proper fix is a Cloud Function, which needs the paid plan.
+     */
+    suspend fun deleteWorkout(workoutId: String, authorId: String): Result<Unit> = safeCall {
+        val workoutRef = workoutsCollection.document(workoutId)
+        val authorRef = firestore.collection(COLLECTION_USERS).document(authorId)
+
+        firestore.batch()
+            .delete(workoutRef)
+            .update(authorRef, FIELD_WORKOUTS_COUNT, FieldValue.increment(-1))
+            .commit()
+            .await()
+    }
+
+    /**
+     * Updates the editable fields of a workout.
+     *
+     * Only the fields the form owns are written, so an edit cannot clobber `likesCount`,
+     * `commentsCount`, `createdAt` or the author - which a whole-object `set` would silently reset.
+     */
+    suspend fun updateWorkout(
+        workoutId: String,
+        fields: Map<String, Any?>
+    ): Result<Unit> = safeCall {
+        workoutsCollection.document(workoutId).update(fields).await()
+    }
+
+    /**
      * Builds the feed query.
      *
      * Filtering by category *and* ordering by `createdAt` needs a composite index - Firestore

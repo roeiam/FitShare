@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One comment: avatar, author, relative time, text.
+
+    RTL: every constraint uses Start/End, so the avatar sits on the right under Hebrew and the text
+    flows away from it without any mirroring work.
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/commentRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:paddingTop="@dimen/space_sm"
+    android:paddingBottom="@dimen/space_sm">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/commentAvatar"
+        android:layout_width="@dimen/comment_avatar_size"
+        android:layout_height="@dimen/comment_avatar_size"
+        android:contentDescription="@string/cd_avatar"
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder_avatar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearance="@style/ShapeAppearance.FitShare.Avatar" />
+
+    <TextView
+        android:id="@+id/commentAuthor"
+        style="@style/TextAppearance.FitShare.Label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_sm"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="?attr/colorOnBackground"
+        app:layout_constraintEnd_toStartOf="@id/commentTime"
+        app:layout_constraintStart_toEndOf="@id/commentAvatar"
+        app:layout_constraintTop_toTopOf="@id/commentAvatar"
+        tools:text="דנה כהן" />
+
+    <TextView
+        android:id="@+id/commentTime"
+        style="@style/TextAppearance.FitShare.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_sm"
+        app:layout_constraintBaseline_toBaselineOf="@id/commentAuthor"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="לפני 5 דקות" />
+
+    <TextView
+        android:id="@+id/commentText"
+        style="@style/TextAppearance.FitShare.Body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_sm"
+        android:layout_marginTop="@dimen/space_xs"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/commentAvatar"
+        app:layout_constraintTop_toBottomOf="@id/commentAuthor"
+        tools:text="אימון מעולה, תודה על השיתוף" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

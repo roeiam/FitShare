@@ -3,12 +3,14 @@ package com.roeiamor.fitshare.di
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.roeiamor.fitshare.data.repository.AuthRepository
+import com.roeiamor.fitshare.data.repository.InteractionRepository
 import com.roeiamor.fitshare.data.repository.WorkoutRepository
 import com.roeiamor.fitshare.ui.addworkout.AddWorkoutViewModel
 import com.roeiamor.fitshare.ui.auth.ForgotPasswordViewModel
-import com.roeiamor.fitshare.ui.feed.FeedViewModel
 import com.roeiamor.fitshare.ui.auth.LoginViewModel
 import com.roeiamor.fitshare.ui.auth.RegisterViewModel
+import com.roeiamor.fitshare.ui.details.WorkoutDetailsViewModel
+import com.roeiamor.fitshare.ui.feed.FeedViewModel
 import com.roeiamor.fitshare.ui.profile.ProfileViewModel
 
 /**
@@ -22,11 +24,21 @@ import com.roeiamor.fitshare.ui.profile.ProfileViewModel
  * Repositories arrive as interfaces, so no ViewModel can reach Firebase directly.
  *
  * @param authRepository accounts and sessions; used by the three auth screens.
- * @param workoutRepository reading workouts; used by the feed.
+ * @param workoutRepository reading and writing workouts.
+ * @param interactionRepository likes, comments and favourites.
  */
 class ViewModelFactory(
     private val authRepository: AuthRepository,
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val interactionRepository: InteractionRepository,
+    /**
+     * Screen arguments the factory cannot know by itself.
+     *
+     * A ViewModel that needs the id of the thing it is showing - the details screen, the add form in
+     * edit mode - gets it here rather than reading `SavedStateHandle`. Passing it explicitly keeps
+     * the dependency visible in this one file, which is the whole point of a hand-written factory.
+     */
+    private val workoutId: String? = null
 ) : ViewModelProvider.Factory {
 
     /**
@@ -51,7 +63,17 @@ class ViewModelFactory(
                 FeedViewModel(workoutRepository)
 
             modelClass.isAssignableFrom(AddWorkoutViewModel::class.java) ->
-                AddWorkoutViewModel(workoutRepository)
+                AddWorkoutViewModel(workoutRepository, workoutId)
+
+            modelClass.isAssignableFrom(WorkoutDetailsViewModel::class.java) ->
+                WorkoutDetailsViewModel(
+                    workoutId = requireNotNull(workoutId) {
+                        "WorkoutDetailsViewModel needs a workoutId; use " +
+                            "ServiceLocator.viewModelFactory(workoutId)"
+                    },
+                    workoutRepository = workoutRepository,
+                    interactionRepository = interactionRepository
+                )
 
             else -> throw IllegalArgumentException(
                 "ViewModelFactory has no branch for ${modelClass.name}. Add one."

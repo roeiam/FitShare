@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The inside of LikeButton: the heart-and-dumbbell mark and its counter.
+
+    merge, not a wrapping layout: LikeButton is itself a LinearLayout, so a container here would add
+    a second, pointless level to every workout card and to the details screen.
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.LinearLayout">
+
+    <ImageView
+        android:id="@+id/likeMark"
+        android:layout_width="@dimen/like_mark_size"
+        android:layout_height="@dimen/like_mark_size"
+        android:contentDescription="@string/cd_like"
+        android:src="@drawable/ic_like_mark" />
+
+    <TextView
+        android:id="@+id/likeCount"
+        style="@style/TextAppearance.FitShare.Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/space_xs"
+        android:minWidth="@dimen/like_count_min_width"
+        tools:text="12" />
+
+</merge>

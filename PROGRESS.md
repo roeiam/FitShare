@@ -292,6 +292,60 @@ yet — the device was locked during Phase 5 and was deliberately left alone.
 
 ---
 
+## Phase 6 — Details and interaction (done)
+
+**Goal:** the details screen, the signature like button, comments, favourites, owner edit/delete,
+share, and two-way sync. Full write-up in `PHASE6_REPORT.md`.
+
+### Built
+
+- `WorkoutDetailsFragment` per SPEC §5 with all four states; the back arrow is the project's first
+  directional icon and carries `autoMirrored` — verified pointing right under Hebrew
+- `LikeButton`, the signature element: the heart-and-dumbbell as **one path** with
+  `fillType="evenOdd"` so the dumbbell is knocked out and the whole mark takes a single tint;
+  overshoot spring on tap, counter fading between values
+- `InteractionDataSource` — like, comment and favourite, each moving its counter inside the same
+  `runTransaction` as the document that justifies it
+- `InteractionRepository`, `CommentAdapter`, comment input with add and long-press delete
+- Favourites write the denormalized snapshot per SPEC §3
+- Owner-only edit and delete; the add form doubles as the editor behind a nullable `workoutId`
+- Share via `ACTION_SEND`; feed scroll restoration via `PREVENT_WHEN_EMPTY`
+
+### Verified on the Samsung with a real second user
+
+Created a second account ("דנה כהן") and wrote her like and comment straight to Firestore from
+outside the app. Both appeared on the phone **live and untouched**: the counter went 0 → 1, and her
+Hebrew comment appeared in the thread.
+
+**The counter invariant held under 12 rapid taps**: `likesCount` = number of like documents = the
+number on screen. Two-way sync confirmed — liking on details showed the same count on the feed card.
+
+### A bug the device caught
+
+The like counter rendered **blank** on any workout with zero likes: `render` only wrote the number
+when it changed, and the tracking field was initialised to `0`, which already matched. It is
+nullable now, so the first render always writes.
+
+### Three accounts now exist in the Firebase project
+
+Worth knowing: the phone is signed in as **`roeiamor123@gmail.com`** (uid `W8gxFF…`, "רועי אמור") -
+Roei's real account, which owns "אימון גב". The others are the Phase 3 test account
+`roei.test.phase3@example.com` and `dana.tester@example.com`. A verification that read the wrong
+uid's favourites made favourites look broken when they were not.
+
+### Built but not exercised
+
+Delete a workout (not run — the only owned workout on that phone is real data), edit end to end,
+the share chooser, comment deletion, and feed scroll restoration.
+
+### Deliberate deviation
+
+Delete is behind a confirmation; **edit is not**. Confirming a reversible action that has not
+happened yet trains people to dismiss dialogs unread, which weakens the delete confirmation that
+actually matters. SPEC §8 defines only `details_delete_confirm`.
+
+---
+
 ## Known open defects
 
 ### 1. Offline registration hangs on the spinner forever — fix in Phase 7

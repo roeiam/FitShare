@@ -29,6 +29,11 @@
     <dimen name="icon_size">24dp</dimen>
     <dimen name="state_icon_size">72dp</dimen>
     <dimen name="image_picker_height">200dp</dimen>
+    <dimen name="like_mark_size">28dp</dimen>
+    <!-- Reserves room for a two-digit count, so the mark does not shift as the number changes -->
+    <dimen name="like_count_min_width">24dp</dimen>
+    <dimen name="hero_image_height">240dp</dimen>
+    <dimen name="comment_avatar_size">32dp</dimen>
     <dimen name="elevation_card">0dp</dimen>
 
     <!-- Text sizes (SPEC section 7) -->

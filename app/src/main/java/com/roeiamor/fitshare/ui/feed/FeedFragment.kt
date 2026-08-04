@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Workout
 import com.roeiamor.fitshare.data.model.WorkoutCategory
@@ -62,6 +63,16 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
         workoutAdapter = WorkoutAdapter(onWorkoutClick = ::openDetails)
         binding.content.adapter = workoutAdapter
         binding.content.setHasFixedSize(true)
+
+        // Keeps the scroll position when coming back from the details screen.
+        //
+        // Navigating away destroys the Fragment's view, and a RecyclerView cannot restore a
+        // position for rows that have not been submitted yet - so the adapter's own state
+        // restoration fires against an empty list and lands at the top. PREVENT_WHEN_EMPTY makes it
+        // wait until the first list arrives, which is exactly when the saved position becomes
+        // meaningful again.
+        workoutAdapter.stateRestorationPolicy =
+            RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
 
     /**

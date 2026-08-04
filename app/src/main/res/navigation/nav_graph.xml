@@ -98,11 +98,24 @@
             app:destination="@id/workoutDetailsFragment" />
     </fragment>
 
+    <!--
+        Doubles as the editor. A null workoutId means "publish something new", which is what the
+        bottom navigation tab passes; a real id means "edit this one". One screen rather than two
+        near-identical forms, for the same reason there is one ProfileFragment.
+    -->
     <fragment
         android:id="@+id/addWorkoutFragment"
         android:name="com.roeiamor.fitshare.ui.addworkout.AddWorkoutFragment"
         android:label="@string/add_title"
-        tools:layout="@layout/fragment_add_workout" />
+        tools:layout="@layout/fragment_add_workout">
+
+        <argument
+            android:name="workoutId"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+
+    </fragment>
 
     <!--
         One profile screen for both cases. userId is nullable: null means "my own profile", which is
@@ -146,6 +159,11 @@
         <action
             android:id="@+id/action_workoutDetails_to_profile"
             app:destination="@id/profileFragment" />
+
+        <!-- Owner only: opens the add form in edit mode -->
+        <action
+            android:id="@+id/action_workoutDetails_to_addWorkout"
+            app:destination="@id/addWorkoutFragment" />
     </fragment>
 
     <fragment

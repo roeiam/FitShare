@@ -25,7 +25,9 @@
         android:paddingEnd="@dimen/screen_padding_horizontal"
         android:paddingBottom="@dimen/space_xxl">
 
+        <!-- Text set in code: this screen doubles as the editor -->
         <TextView
+            android:id="@+id/screenTitle"
             style="@style/TextAppearance.FitShare.Headline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
