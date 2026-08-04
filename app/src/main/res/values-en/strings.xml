@@ -126,12 +126,23 @@
 
     <!-- Relative time -->
     <string name="time_now">Just now</string>
-    <string name="time_minutes">%1$d minutes ago</string>
-    <string name="time_hours">%1$d hours ago</string>
     <string name="time_yesterday">Yesterday</string>
 
+    <plurals name="time_minutes_ago">
+        <item quantity="one">A minute ago</item>
+        <item quantity="other">%1$d minutes ago</item>
+    </plurals>
+
+    <plurals name="time_hours_ago">
+        <item quantity="one">An hour ago</item>
+        <item quantity="other">%1$d hours ago</item>
+    </plurals>
+
     <!-- Units -->
-    <string name="unit_minutes">%1$d min</string>
+    <plurals name="unit_minutes">
+        <item quantity="one">1 min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
 
     <!-- Shared actions -->
     <string name="action_retry">Try again</string>

@@ -59,6 +59,31 @@
         <item name="android:minHeight">@dimen/touch_target_min</item>
     </style>
 
+    <!--
+        The meta chips on a workout card: category, duration, difficulty.
+        Display only - they show information, they are not controls, so they are not clickable and
+        not checkable. Without that they would take touch feedback and read as tappable.
+    -->
+    <style name="Widget.FitShare.Chip.Meta" parent="Widget.Material3.Chip.Assist">
+        <item name="android:clickable">false</item>
+        <item name="android:focusable">false</item>
+        <item name="android:checkable">false</item>
+        <item name="chipMinHeight">28dp</item>
+        <item name="ensureMinTouchTargetSize">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.FitShare.Caption</item>
+    </style>
+
+    <!-- The category filter chips on the feed. These *are* controls. -->
+    <style name="Widget.FitShare.Chip.Filter" parent="Widget.Material3.Chip.Filter">
+        <item name="android:textAppearance">@style/TextAppearance.FitShare.Label</item>
+    </style>
+
+    <!-- Circular avatar, used on cards and later on the profile -->
+    <style name="ShapeAppearance.FitShare.Avatar" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
     <!-- Shape appearances, so every card / button / image rounds identically -->
     <style name="ShapeAppearance.FitShare.Card" parent="ShapeAppearance.Material3.Corner.Medium">
         <item name="cornerFamily">rounded</item>

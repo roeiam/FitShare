@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shown when a workout photo fails to load: the same surface as the placeholder, with a
+     small icon so a failure is distinguishable from "still loading". -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/placeholder_workout" />
+    <item
+        android:drawable="@drawable/ic_image_off"
+        android:gravity="center" />
+</layer-list>

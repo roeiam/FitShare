@@ -3,7 +3,9 @@ package com.roeiamor.fitshare.di
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.roeiamor.fitshare.data.repository.AuthRepository
+import com.roeiamor.fitshare.data.repository.WorkoutRepository
 import com.roeiamor.fitshare.ui.auth.ForgotPasswordViewModel
+import com.roeiamor.fitshare.ui.feed.FeedViewModel
 import com.roeiamor.fitshare.ui.auth.LoginViewModel
 import com.roeiamor.fitshare.ui.auth.RegisterViewModel
 import com.roeiamor.fitshare.ui.profile.ProfileViewModel
@@ -19,9 +21,11 @@ import com.roeiamor.fitshare.ui.profile.ProfileViewModel
  * Repositories arrive as interfaces, so no ViewModel can reach Firebase directly.
  *
  * @param authRepository accounts and sessions; used by the three auth screens.
+ * @param workoutRepository reading workouts; used by the feed.
  */
 class ViewModelFactory(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val workoutRepository: WorkoutRepository
 ) : ViewModelProvider.Factory {
 
     /**
@@ -41,6 +45,9 @@ class ViewModelFactory(
 
             modelClass.isAssignableFrom(ProfileViewModel::class.java) ->
                 ProfileViewModel(authRepository)
+
+            modelClass.isAssignableFrom(FeedViewModel::class.java) ->
+                FeedViewModel(workoutRepository)
 
             else -> throw IllegalArgumentException(
                 "ViewModelFactory has no branch for ${modelClass.name}. Add one."

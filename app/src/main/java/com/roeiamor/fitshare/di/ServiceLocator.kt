@@ -5,8 +5,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.roeiamor.fitshare.data.remote.AuthDataSource
 import com.roeiamor.fitshare.data.remote.UserDataSource
+import com.roeiamor.fitshare.data.remote.WorkoutDataSource
 import com.roeiamor.fitshare.data.repository.AuthRepository
 import com.roeiamor.fitshare.data.repository.AuthRepositoryImpl
+import com.roeiamor.fitshare.data.repository.WorkoutRepository
+import com.roeiamor.fitshare.data.repository.WorkoutRepositoryImpl
 
 /**
  * The project's dependency container, written by hand instead of using Hilt or Koin.
@@ -41,6 +44,8 @@ object ServiceLocator {
 
     private val userDataSource: UserDataSource by lazy { UserDataSource(firestore) }
 
+    private val workoutDataSource: WorkoutDataSource by lazy { WorkoutDataSource(firestore) }
+
     // ---- Repositories ----------------------------------------------------------------------
 
     /** Accounts and sessions. Exposed as the interface so callers cannot reach Firebase through it. */
@@ -50,8 +55,15 @@ object ServiceLocator {
 
     // ---- ViewModels ------------------------------------------------------------------------
 
+    /** Reading workouts. Exposed as the interface so callers cannot reach Firestore through it. */
+    val workoutRepository: WorkoutRepository by lazy {
+        WorkoutRepositoryImpl(workoutDataSource)
+    }
+
     /** The single factory every Fragment uses to obtain its ViewModel. */
-    val viewModelFactory: ViewModelFactory by lazy { ViewModelFactory(authRepository) }
+    val viewModelFactory: ViewModelFactory by lazy {
+        ViewModelFactory(authRepository, workoutRepository)
+    }
 
     // ---- Lifecycle -------------------------------------------------------------------------
 

@@ -190,6 +190,53 @@ palette is unchanged — `mint_on_light` still fills buttons, where ink on it me
 
 ---
 
+## Phase 4 — The feed read path (done)
+
+**Goal:** a live feed of workout cards with filter, search, refresh and all four states.
+Full write-up in `PHASE4_REPORT.md`.
+
+### Built
+
+- `Workout`, plus `WorkoutCategory` / `Difficulty` kept plain, with one label mapping in
+  `ui/common/EnumLabels.kt`; `FeedSort`
+- `WorkoutDataSource.observeFeed(category, sort)` on a `snapshotListener` in `callbackFlow`,
+  and `getWorkout(id)`
+- `WorkoutRepository` returning `Flow<Result<T>>`; `FeedViewModel` combines filter, search and sort
+  and ends with `asLiveData()`
+- `item_workout.xml` per SPEC §5, `WorkoutAdapter` as a `ListAdapter` + `DiffUtil`
+- `FeedFragment` with RecyclerView, generated category chips, search, SwipeRefresh, four states
+- Glide helpers with placeholder and error; a workout with no image renders correctly
+- `util/TimeFormatter.kt` with 10 unit tests; Hebrew plurals for minutes, hours and duration
+- `firestore.indexes.json`
+
+### Open item that needs Roei
+
+**The category filter needs a Firestore composite index**, which only a project owner can create.
+The query is verifiably correct — Firestore echoed `workouts where category==STRENGTH order by
+-createdAt` — and the app shows its Hebrew error state rather than crashing. The one-click URL is in
+`PHASE4_REPORT.md` §6, and `firestore.indexes.json` covers it for `firebase deploy`.
+
+### Verified on the device
+
+Four workouts seeded into Firestore, including one with no image and one with a very long Hebrew
+title. **The feed updated live, with the app running and untouched** — proven when the seed data was
+rewritten from corrupt to correct and the cards changed on screen. Search matches and non-matches,
+the two different empty states, pull to refresh, rotation, card tap into details, and no listener
+accumulation over 8 navigation cycles (Views 334 → 132, Activities → 1). 34 unit tests pass.
+
+### Landscape defect found and fixed
+
+Rotating with a text field focused made the field take over the whole screen — the IME's fullscreen
+"extract" mode, which affected **every** input in the app, not just the feed. Fixed with
+`flagNoExtractUi` on all eight.
+
+### Deviations
+
+- Hebrew **plurals** replace SPEC §8's `לפני %d דקות`, which renders "לפני 1 דקות".
+- `FeedSort` exists in the data layer but has no UI control — sorting is SPEC feature 19, an extra.
+
+---
+
 ## For the README — known difficulties
 
 These are the things that cost real time and are worth writing up:

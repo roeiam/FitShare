@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One workout card, exactly the anatomy in SPEC section 5:
+
+        avatar (circle 40dp) + name + relative time
+        image 16:9, centerCrop, rounded
+        title
+        ChipGroup: category / duration / difficulty
+        like count + comment count
+
+    The whole card is clickable and opens the details screen.
+
+    RTL: every constraint uses Start/End, never Left/Right, so the card mirrors on its own. The
+    avatar sits at the start - the right-hand side under Hebrew.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/workoutCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/card_gap"
+    android:checkable="false"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardElevation="@dimen/elevation_card"
+    app:shapeAppearance="@style/ShapeAppearance.FitShare.Card"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/space_md">
+
+        <!-- ===== Author row ===== -->
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/authorAvatar"
+            android:layout_width="@dimen/avatar_size_small"
+            android:layout_height="@dimen/avatar_size_small"
+            android:contentDescription="@string/cd_avatar"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder_avatar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearance="@style/ShapeAppearance.FitShare.Avatar" />
+
+        <TextView
+            android:id="@+id/authorName"
+            style="@style/TextAppearance.FitShare.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constraintBottom_toTopOf="@id/createdAt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/authorAvatar"
+            app:layout_constraintTop_toTopOf="@id/authorAvatar"
+            app:layout_constraintVertical_chainStyle="packed"
+            tools:text="רועי עמור" />
+
+        <TextView
+            android:id="@+id/createdAt"
+            style="@style/TextAppearance.FitShare.Caption"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constraintBottom_toBottomOf="@id/authorAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/authorAvatar"
+            app:layout_constraintTop_toBottomOf="@id/authorName"
+            tools:text="לפני 3 שעות" />
+
+        <!-- ===== Photo: 16:9, rounded, centerCrop ===== -->
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/workoutImage"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/space_md"
+            android:contentDescription="@string/cd_workout_image"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder_workout"
+            app:layout_constraintDimensionRatio="16:9"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/authorAvatar"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.FitShare.Card" />
+
+        <!-- ===== Title ===== -->
+
+        <TextView
+            android:id="@+id/workoutTitle"
+            style="@style/TextAppearance.FitShare.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:ellipsize="end"
+            android:maxLines="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/workoutImage"
+            tools:text="אימון כוח לפלג גוף עליון" />
+
+        <!-- ===== Meta chips ===== -->
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/metaChips"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            app:chipSpacingHorizontal="@dimen/space_xs"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/workoutTitle"
+            app:singleLine="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/categoryChip"
+                style="@style/Widget.FitShare.Chip.Meta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="כוח" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/durationChip"
+                style="@style/Widget.FitShare.Chip.Meta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="45 דקות" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/difficultyChip"
+                style="@style/Widget.FitShare.Chip.Meta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="בינוני" />
+
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- ===== Counters. Read only in Phase 4; Phase 6 makes the like interactive. ===== -->
+
+        <ImageView
+            android:id="@+id/likeIcon"
+            android:layout_width="@dimen/icon_size"
+            android:layout_height="@dimen/icon_size"
+            android:layout_marginTop="@dimen/space_md"
+            android:contentDescription="@string/cd_like"
+            android:src="@drawable/ic_like"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/metaChips" />
+
+        <TextView
+            android:id="@+id/likesCount"
+            style="@style/TextAppearance.FitShare.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_xs"
+            app:layout_constraintBottom_toBottomOf="@id/likeIcon"
+            app:layout_constraintStart_toEndOf="@id/likeIcon"
+            app:layout_constraintTop_toTopOf="@id/likeIcon"
+            tools:text="12" />
+
+        <ImageView
+            android:id="@+id/commentIcon"
+            android:layout_width="@dimen/icon_size"
+            android:layout_height="@dimen/icon_size"
+            android:layout_marginStart="@dimen/space_lg"
+            android:contentDescription="@string/cd_comments"
+            android:src="@drawable/ic_comment"
+            app:layout_constraintBottom_toBottomOf="@id/likeIcon"
+            app:layout_constraintStart_toEndOf="@id/likesCount"
+            app:layout_constraintTop_toTopOf="@id/likeIcon" />
+
+        <TextView
+            android:id="@+id/commentsCount"
+            style="@style/TextAppearance.FitShare.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_xs"
+            app:layout_constraintBottom_toBottomOf="@id/commentIcon"
+            app:layout_constraintStart_toEndOf="@id/commentIcon"
+            app:layout_constraintTop_toTopOf="@id/commentIcon"
+            tools:text="4" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

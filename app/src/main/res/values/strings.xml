@@ -121,14 +121,31 @@
     <string name="difficulty_medium">בינוני</string>
     <string name="difficulty_hard">מאתגר</string>
 
-    <!-- Relative time (util/TimeFormatter) -->
+    <!--
+        Relative time (util/TimeFormatter). Plurals, not plain format strings: Hebrew inflects for
+        one and for two, so "לפני %d דקות" would render "לפני 1 דקות" and read as broken Hebrew.
+    -->
     <string name="time_now">כרגע</string>
-    <string name="time_minutes">לפני %1$d דקות</string>
-    <string name="time_hours">לפני %1$d שעות</string>
     <string name="time_yesterday">אתמול</string>
 
+    <plurals name="time_minutes_ago">
+        <item quantity="one">לפני דקה</item>
+        <item quantity="two">לפני שתי דקות</item>
+        <item quantity="other">לפני %1$d דקות</item>
+    </plurals>
+
+    <plurals name="time_hours_ago">
+        <item quantity="one">לפני שעה</item>
+        <item quantity="two">לפני שעתיים</item>
+        <item quantity="other">לפני %1$d שעות</item>
+    </plurals>
+
     <!-- Units -->
-    <string name="unit_minutes">%1$d דקות</string>
+    <plurals name="unit_minutes">
+        <item quantity="one">דקה אחת</item>
+        <item quantity="two">שתי דקות</item>
+        <item quantity="other">%1$d דקות</item>
+    </plurals>
 
     <!-- Shared actions -->
     <string name="action_retry">נסה שוב</string>

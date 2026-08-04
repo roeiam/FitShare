@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Like count on a feed card. Read-only in Phase 4; Phase 6 replaces it with the animated
+     heart-and-dumbbell signature button. Symmetrical - nothing to mirror in RTL. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorOnSurfaceVariant">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,21.35l-1.45,-1.32C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09C13.09,3.81 14.76,3 16.5,3 19.58,3 22,5.42 22,8.5c0,3.78 -3.4,6.86 -8.55,11.54L12,21.35zM12,18.35c4.35,-3.94 7,-6.42 7,-9.85 0,-1.97 -1.53,-3.5 -3.5,-3.5 -1.11,0 -2.19,0.52 -2.89,1.34L12,7.26l-0.61,-0.92C10.69,5.52 9.61,5 8.5,5 6.53,5 5,6.53 5,8.5c0,3.43 2.65,5.91 7,9.85z" />
+</vector>
