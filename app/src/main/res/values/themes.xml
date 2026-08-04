@@ -1,9 +1,45 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Light theme. The dark counterpart lives in values-night/themes.xml and overrides only
+    the colour roles - everything structural is defined once, here.
+
+    colorOnPrimary is @color/ink rather than white on purpose: ink on mint_on_light measures
+    5.4:1, white on mint_on_light only 3.4:1, and SPEC section 7 requires 4.5:1.
+-->
+<resources>
+
     <style name="Base.Theme.FitShare" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <!-- Brand -->
+        <item name="colorPrimary">@color/mint_on_light</item>
+        <item name="colorOnPrimary">@color/ink</item>
+        <item name="colorPrimaryContainer">@color/mint</item>
+        <item name="colorOnPrimaryContainer">@color/ink</item>
+        <item name="colorSecondary">@color/mint_on_light</item>
+        <item name="colorOnSecondary">@color/ink</item>
+
+        <!-- Surfaces -->
+        <item name="android:colorBackground">@color/cloud</item>
+        <item name="colorOnBackground">@color/text_on_light_high</item>
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnSurface">@color/text_on_light_high</item>
+        <item name="colorSurfaceVariant">@color/cloud</item>
+        <item name="colorOnSurfaceVariant">@color/text_on_light_muted</item>
+        <item name="colorOutline">@color/outline_light</item>
+        <item name="colorOutlineVariant">@color/outline_light</item>
+
+        <!-- Errors -->
+        <item name="colorError">@color/danger_on_light</item>
+        <item name="colorOnError">@color/white</item>
+
+        <!-- Typography default, so even an unstyled TextView renders in Heebo -->
+        <item name="android:fontFamily">@font/font_body</item>
+        <item name="fontFamily">@font/font_body</item>
+
+        <!-- Shape -->
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.FitShare.Card</item>
     </style>
 
     <style name="Theme.FitShare" parent="Base.Theme.FitShare" />
+
 </resources>

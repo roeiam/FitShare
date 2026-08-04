@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    English translation.
+
+    This file is NEVER loaded at runtime: FitShareApp locks the app to Hebrew with
+    setApplicationLocales("he"), per SPEC section 9.2. It is kept deliberately, to show that
+    no user-facing text is hardcoded and that the app is translation-ready. Keep it in sync
+    with values/strings.xml. Explained in the README so it is not mistaken for dead code.
+-->
+<resources>
+
+    <string name="app_name">FitShare</string>
+    <string name="app_tagline">Workouts, inspiration and progress in one place</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_feed">Feed</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_add">Add</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Login -->
+    <string name="login_title">Welcome back</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_submit">Log in</string>
+    <string name="login_to_register">No account yet? Sign up</string>
+    <string name="login_forgot">Forgot your password?</string>
+
+    <!-- Register -->
+    <string name="register_title">Create an account</string>
+    <string name="register_name">Full name</string>
+    <string name="register_confirm">Confirm password</string>
+    <string name="register_submit">Sign up</string>
+    <string name="register_avatar">Profile photo (optional)</string>
+    <string name="register_to_login">Already have an account? Log in</string>
+
+    <!-- Forgot password -->
+    <string name="forgot_title">Reset password</string>
+    <string name="forgot_submit">Send link</string>
+    <string name="forgot_sent">We sent you a password reset link</string>
+
+    <!-- Feed -->
+    <string name="feed_title">Workout feed</string>
+    <string name="feed_search">Search a workout or a person</string>
+    <string name="feed_empty_title">No workouts here yet</string>
+    <string name="feed_empty_body">Post the first workout and start the feed</string>
+    <string name="feed_empty_action">Post a workout</string>
+    <string name="feed_filter_all">All</string>
+    <string name="feed_no_results_title">No matching workouts</string>
+    <string name="feed_no_results_body">Try another word or pick a different category</string>
+    <string name="feed_sort_newest">Newest</string>
+    <string name="feed_sort_most_liked">Most liked</string>
+
+    <!-- Add workout -->
+    <string name="add_title">Post a workout</string>
+    <string name="add_photo">Add a photo</string>
+    <string name="add_from_camera">Camera</string>
+    <string name="add_from_gallery">Gallery</string>
+    <string name="add_workout_name">Workout name</string>
+    <string name="add_description">Description</string>
+    <string name="add_duration">Duration (minutes)</string>
+    <string name="add_category">Category</string>
+    <string name="add_difficulty">Difficulty</string>
+    <string name="add_publish">Publish workout</string>
+    <string name="add_uploading">Uploading your workout…</string>
+    <string name="add_success">Workout published</string>
+
+    <!-- Workout details -->
+    <string name="details_title">Workout details</string>
+    <string name="details_comments">Comments</string>
+    <string name="details_comment_hint">Write a comment…</string>
+    <string name="details_comment_send">Send</string>
+    <string name="details_no_comments">No comments yet. Be the first.</string>
+    <string name="details_save">Save to favorites</string>
+    <string name="details_saved">Saved to favorites</string>
+    <string name="details_unsaved">Removed from favorites</string>
+    <string name="details_share">Share</string>
+    <string name="details_edit">Edit</string>
+    <string name="details_delete">Delete</string>
+    <string name="details_delete_confirm">Delete this workout? This cannot be undone.</string>
+    <string name="details_comment_delete_confirm">Delete this comment?</string>
+
+    <!-- Favorites -->
+    <string name="favorites_title">Favorites</string>
+    <string name="favorites_empty_title">No saved workouts yet</string>
+    <string name="favorites_empty_body">Save a workout from the feed to come back to it anytime</string>
+    <string name="favorites_empty_action">Go to the feed</string>
+    <string name="favorites_remove_confirm">Remove this workout from favorites?</string>
+
+    <!-- Profile -->
+    <string name="profile_title">My profile</string>
+    <string name="profile_workouts">Workouts</string>
+    <string name="profile_likes">Likes</string>
+    <string name="profile_favorites">Favorites</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_logout">Log out</string>
+    <string name="profile_logout_confirm">Log out of your account?</string>
+    <string name="profile_theme">Appearance</string>
+    <string name="profile_empty_title">You have not posted any workouts</string>
+    <string name="profile_empty_body">Your first workout will show up here</string>
+    <string name="profile_empty_title_other">This user has not posted any workouts</string>
+    <string name="profile_empty_body_other">Their workouts will show up here</string>
+
+    <!-- Edit profile -->
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="edit_profile_name">Full name</string>
+    <string name="edit_profile_bio">About me</string>
+    <string name="edit_profile_avatar">Change photo</string>
+    <string name="edit_profile_save">Save</string>
+    <string name="edit_profile_saved">Profile updated</string>
+
+    <!-- Categories -->
+    <string name="category_strength">Strength</string>
+    <string name="category_running">Running</string>
+    <string name="category_hiit">HIIT</string>
+    <string name="category_yoga">Yoga</string>
+    <string name="category_cycling">Cycling</string>
+    <string name="category_swimming">Swimming</string>
+    <string name="category_crossfit">CrossFit</string>
+    <string name="category_other">Other</string>
+
+    <!-- Difficulty -->
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+
+    <!-- Relative time -->
+    <string name="time_now">Just now</string>
+    <string name="time_minutes">%1$d minutes ago</string>
+    <string name="time_hours">%1$d hours ago</string>
+    <string name="time_yesterday">Yesterday</string>
+
+    <!-- Units -->
+    <string name="unit_minutes">%1$d min</string>
+
+    <!-- Shared actions -->
+    <string name="action_retry">Try again</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+
+    <!-- Shared states -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_error_title">Something went wrong</string>
+
+    <!-- Errors -->
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_no_network">No internet connection</string>
+    <string name="error_invalid_email">That email address is not valid</string>
+    <string name="error_short_password">Password must be at least 6 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_wrong_credentials">Wrong email or password</string>
+    <string name="error_email_in_use">That email is already registered</string>
+    <string name="error_required_field">Required field</string>
+    <string name="error_image_upload">Image upload failed. Try again.</string>
+    <string name="error_title_length">Workout name must be 3 to 60 characters</string>
+    <string name="error_description_length">Description can be up to 600 characters</string>
+    <string name="error_duration_range">Duration must be between 1 and 600 minutes</string>
+    <string name="error_comment_length">A comment can be up to 300 characters</string>
+    <string name="error_camera_permission">Without camera access you can still pick a photo from the gallery</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_avatar">Profile photo</string>
+    <string name="cd_workout_image">Workout photo</string>
+    <string name="cd_like">Like</string>
+    <string name="cd_comments">Comments</string>
+    <string name="cd_favorite">Save to favorites</string>
+    <string name="cd_share">Share</string>
+    <string name="cd_back">Back</string>
+
+</resources>

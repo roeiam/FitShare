@@ -1,7 +1,41 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dark theme - the look the mockups were drawn in (SPEC section 7).
+    Overrides colour roles only; structure, typography and shape are inherited from
+    values/themes.xml so there is exactly one definition of each.
+-->
+<resources>
+
     <style name="Base.Theme.FitShare" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+
+        <!-- Brand -->
+        <item name="colorPrimary">@color/mint</item>
+        <item name="colorOnPrimary">@color/ink</item>
+        <item name="colorPrimaryContainer">@color/navy_elevated</item>
+        <item name="colorOnPrimaryContainer">@color/mint</item>
+        <item name="colorSecondary">@color/mint</item>
+        <item name="colorOnSecondary">@color/ink</item>
+
+        <!-- Surfaces -->
+        <item name="android:colorBackground">@color/ink</item>
+        <item name="colorOnBackground">@color/text_high</item>
+        <item name="colorSurface">@color/navy</item>
+        <item name="colorOnSurface">@color/text_high</item>
+        <item name="colorSurfaceVariant">@color/navy_elevated</item>
+        <item name="colorOnSurfaceVariant">@color/text_muted</item>
+        <item name="colorOutline">@color/navy_elevated</item>
+        <item name="colorOutlineVariant">@color/navy_elevated</item>
+
+        <!-- Errors -->
+        <item name="colorError">@color/danger</item>
+        <item name="colorOnError">@color/ink</item>
+
+        <!-- Typography default, so even an unstyled TextView renders in Heebo -->
+        <item name="android:fontFamily">@font/font_body</item>
+        <item name="fontFamily">@font/font_body</item>
+
+        <!-- Shape -->
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.FitShare.Card</item>
     </style>
+
 </resources>

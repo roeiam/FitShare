@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The five text styles from SPEC section 7, defined once.
+
+    IMPORTANT - apply these with style="@style/TextAppearance.FitShare.Body", NOT with
+    android:textAppearance="...". Applied as a full style, android:lineSpacingMultiplier
+    takes effect; referenced as a textAppearance it would be silently ignored, and Hebrew
+    needs the 1.3 line spacing to stay readable.
+
+    Colours are intentionally absent - they come from the theme, so the same style works
+    in light and dark.
+-->
+<resources>
+
+    <style name="TextAppearance.FitShare" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:lineSpacingMultiplier">1.3</item>
+        <item name="android:textAlignment">viewStart</item>
+    </style>
+
+    <style name="TextAppearance.FitShare.Headline">
+        <item name="android:fontFamily">@font/font_heading</item>
+        <item name="android:textSize">@dimen/text_headline</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <style name="TextAppearance.FitShare.Title">
+        <item name="android:fontFamily">@font/font_heading</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <style name="TextAppearance.FitShare.Body">
+        <item name="android:fontFamily">@font/font_body</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <style name="TextAppearance.FitShare.Label">
+        <item name="android:fontFamily">@font/font_body</item>
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="TextAppearance.FitShare.Caption">
+        <item name="android:fontFamily">@font/font_body</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Shape appearances, so every card / button / image rounds identically -->
+    <style name="ShapeAppearance.FitShare.Card" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_card</item>
+    </style>
+
+    <style name="ShapeAppearance.FitShare.Button" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_button</item>
+    </style>
+
+</resources>

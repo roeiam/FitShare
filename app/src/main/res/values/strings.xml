@@ -1,3 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Hebrew is the DEFAULT locale (SPEC section 8). Naming convention: screen_element.
+    Voice: plain, active, second person, sentence case. An error says what happened and
+    what to do; an empty screen is an invitation to act.
+-->
 <resources>
+
     <string name="app_name">FitShare</string>
+    <string name="app_tagline">אימונים, השראה והתקדמות במקום אחד</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_feed">פיד</string>
+    <string name="nav_favorites">מועדפים</string>
+    <string name="nav_add">הוספה</string>
+    <string name="nav_profile">פרופיל</string>
+
+    <!-- Login -->
+    <string name="login_title">ברוך שובך</string>
+    <string name="login_email">אימייל</string>
+    <string name="login_password">סיסמה</string>
+    <string name="login_submit">התחברות</string>
+    <string name="login_to_register">אין לך חשבון? הרשמה</string>
+    <string name="login_forgot">שכחת סיסמה?</string>
+
+    <!-- Register -->
+    <string name="register_title">יוצרים חשבון</string>
+    <string name="register_name">שם מלא</string>
+    <string name="register_confirm">אימות סיסמה</string>
+    <string name="register_submit">הרשמה</string>
+    <string name="register_avatar">תמונת פרופיל (לא חובה)</string>
+    <string name="register_to_login">כבר יש לך חשבון? התחברות</string>
+
+    <!-- Forgot password -->
+    <string name="forgot_title">איפוס סיסמה</string>
+    <string name="forgot_submit">שליחת קישור</string>
+    <string name="forgot_sent">שלחנו לך קישור לאיפוס סיסמה</string>
+
+    <!-- Feed -->
+    <string name="feed_title">פיד אימונים</string>
+    <string name="feed_search">חיפוש אימון או מתאמן</string>
+    <string name="feed_empty_title">עוד אין כאן אימונים</string>
+    <string name="feed_empty_body">העלה את האימון הראשון והתחל את הפיד</string>
+    <string name="feed_empty_action">העלאת אימון</string>
+    <string name="feed_filter_all">הכל</string>
+    <string name="feed_no_results_title">לא מצאנו אימונים מתאימים</string>
+    <string name="feed_no_results_body">נסה מילה אחרת או בחר קטגוריה אחרת</string>
+    <string name="feed_sort_newest">החדשים ביותר</string>
+    <string name="feed_sort_most_liked">הכי אהובים</string>
+
+    <!-- Add workout -->
+    <string name="add_title">העלאת אימון</string>
+    <string name="add_photo">הוספת תמונה</string>
+    <string name="add_from_camera">צילום</string>
+    <string name="add_from_gallery">מהגלריה</string>
+    <string name="add_workout_name">שם האימון</string>
+    <string name="add_description">תיאור האימון</string>
+    <string name="add_duration">משך (בדקות)</string>
+    <string name="add_category">קטגוריה</string>
+    <string name="add_difficulty">רמת קושי</string>
+    <string name="add_publish">פרסום האימון</string>
+    <string name="add_uploading">מעלה את האימון…</string>
+    <string name="add_success">האימון פורסם</string>
+
+    <!-- Workout details -->
+    <string name="details_title">פרטי האימון</string>
+    <string name="details_comments">תגובות</string>
+    <string name="details_comment_hint">כתוב תגובה…</string>
+    <string name="details_comment_send">שליחה</string>
+    <string name="details_no_comments">אין עדיין תגובות. תהיה הראשון.</string>
+    <string name="details_save">שמירה למועדפים</string>
+    <string name="details_saved">נשמר במועדפים</string>
+    <string name="details_unsaved">הוסר מהמועדפים</string>
+    <string name="details_share">שיתוף</string>
+    <string name="details_edit">עריכה</string>
+    <string name="details_delete">מחיקה</string>
+    <string name="details_delete_confirm">למחוק את האימון? הפעולה אינה הפיכה.</string>
+    <string name="details_comment_delete_confirm">למחוק את התגובה?</string>
+
+    <!-- Favorites -->
+    <string name="favorites_title">מועדפים</string>
+    <string name="favorites_empty_title">אין עדיין אימונים שמורים</string>
+    <string name="favorites_empty_body">שמור אימון מהפיד כדי לחזור אליו מתי שתרצה</string>
+    <string name="favorites_empty_action">מעבר לפיד</string>
+    <string name="favorites_remove_confirm">להסיר את האימון מהמועדפים?</string>
+
+    <!-- Profile -->
+    <string name="profile_title">הפרופיל שלי</string>
+    <string name="profile_workouts">אימונים</string>
+    <string name="profile_likes">לייקים</string>
+    <string name="profile_favorites">מועדפים</string>
+    <string name="profile_edit">עריכת פרופיל</string>
+    <string name="profile_logout">התנתקות</string>
+    <string name="profile_logout_confirm">להתנתק מהחשבון?</string>
+    <string name="profile_theme">מצב תצוגה</string>
+    <string name="profile_empty_title">עוד לא העלית אימונים</string>
+    <string name="profile_empty_body">האימון הראשון שלך יופיע כאן</string>
+    <string name="profile_empty_title_other">המשתמש עוד לא העלה אימונים</string>
+    <string name="profile_empty_body_other">כשיעלה אימון, הוא יופיע כאן</string>
+
+    <!-- Edit profile -->
+    <string name="edit_profile_title">עריכת פרופיל</string>
+    <string name="edit_profile_name">שם מלא</string>
+    <string name="edit_profile_bio">קצת עליי</string>
+    <string name="edit_profile_avatar">החלפת תמונה</string>
+    <string name="edit_profile_save">שמירה</string>
+    <string name="edit_profile_saved">הפרופיל עודכן</string>
+
+    <!-- Categories (SPEC section 4) -->
+    <string name="category_strength">כוח</string>
+    <string name="category_running">ריצה</string>
+    <string name="category_hiit">HIIT</string>
+    <string name="category_yoga">יוגה</string>
+    <string name="category_cycling">אופניים</string>
+    <string name="category_swimming">שחייה</string>
+    <string name="category_crossfit">קרוספיט</string>
+    <string name="category_other">אחר</string>
+
+    <!-- Difficulty (SPEC section 4) -->
+    <string name="difficulty_easy">קל</string>
+    <string name="difficulty_medium">בינוני</string>
+    <string name="difficulty_hard">מאתגר</string>
+
+    <!-- Relative time (util/TimeFormatter) -->
+    <string name="time_now">כרגע</string>
+    <string name="time_minutes">לפני %1$d דקות</string>
+    <string name="time_hours">לפני %1$d שעות</string>
+    <string name="time_yesterday">אתמול</string>
+
+    <!-- Units -->
+    <string name="unit_minutes">%1$d דקות</string>
+
+    <!-- Shared actions -->
+    <string name="action_retry">נסה שוב</string>
+    <string name="action_cancel">ביטול</string>
+    <string name="action_confirm">אישור</string>
+    <string name="action_delete">מחיקה</string>
+    <string name="action_back">חזרה</string>
+
+    <!-- Shared states -->
+    <string name="state_loading">טוען…</string>
+    <string name="state_error_title">משהו השתבש</string>
+
+    <!-- Errors -->
+    <string name="error_generic">משהו השתבש. נסה שוב.</string>
+    <string name="error_no_network">אין חיבור לאינטרנט</string>
+    <string name="error_invalid_email">כתובת אימייל לא תקינה</string>
+    <string name="error_short_password">הסיסמה חייבת להכיל לפחות 6 תווים</string>
+    <string name="error_password_mismatch">הסיסמאות אינן תואמות</string>
+    <string name="error_wrong_credentials">אימייל או סיסמה שגויים</string>
+    <string name="error_email_in_use">כתובת האימייל כבר רשומה</string>
+    <string name="error_required_field">שדה חובה</string>
+    <string name="error_image_upload">העלאת התמונה נכשלה. נסה שוב.</string>
+    <string name="error_title_length">שם האימון חייב להכיל בין 3 ל־60 תווים</string>
+    <string name="error_description_length">התיאור יכול להכיל עד 600 תווים</string>
+    <string name="error_duration_range">משך האימון חייב להיות בין 1 ל־600 דקות</string>
+    <string name="error_comment_length">התגובה יכולה להכיל עד 300 תווים</string>
+    <string name="error_camera_permission">בלי הרשאת מצלמה אפשר לבחור תמונה מהגלריה</string>
+
+    <!-- Content descriptions (accessibility) -->
+    <string name="cd_avatar">תמונת פרופיל</string>
+    <string name="cd_workout_image">תמונת האימון</string>
+    <string name="cd_like">לייק</string>
+    <string name="cd_comments">תגובות</string>
+    <string name="cd_favorite">שמירה למועדפים</string>
+    <string name="cd_share">שיתוף</string>
+    <string name="cd_back">חזרה</string>
+
 </resources>

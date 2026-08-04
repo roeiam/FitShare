@@ -1,9 +1,22 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.navigation.safeargs)
 }
+
+/**
+ * Reads a value from gradle.properties, failing the build with a clear message when it is missing.
+ * Used for the Cloudinary settings so a misconfigured machine fails at configuration time
+ * rather than with a confusing upload error at runtime.
+ */
+fun requiredProperty(name: String): String =
+    providers.gradleProperty(name).orNull
+        ?: throw GradleException("Missing '$name' in gradle.properties. See README.")
 
 android {
     namespace = "com.roeiamor.fitshare"
+
+    // Stays at 36: API 37 is deliberately not installed. See CLAUDE.md > Pinned dependencies.
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -18,6 +31,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Cloudinary unsigned upload. The preset is public by design - it is embedded in
+        // every client that uses it - so this is not a leaked secret. Explained in the README.
+        buildConfigField(
+            "String",
+            "CLOUDINARY_CLOUD_NAME",
+            "\"${requiredProperty("CLOUDINARY_CLOUD_NAME")}\""
+        )
+        buildConfigField(
+            "String",
+            "CLOUDINARY_UPLOAD_PRESET",
+            "\"${requiredProperty("CLOUDINARY_UPLOAD_PRESET")}\""
+        )
     }
 
     buildTypes {
@@ -29,6 +55,12 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -36,12 +68,44 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.activity.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.constraintlayout)
+    // AndroidX UI
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.material)
+
+    // MVVM: ViewModel + LiveData
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Single-Activity navigation
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+
+    // Firebase - the BOM aligns every module to one compatible set
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+
+    // Coroutines, plus await() for Firebase Task<T>
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // Image loading and the Cloudinary upload client
+    implementation(libs.glide)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+
+    // Testing
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

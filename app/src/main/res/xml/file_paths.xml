@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Paths the FileProvider is allowed to share. Only the camera temp file lives here:
+    the camera app needs a writable Uri to save the photo into, and handing it a raw
+    file:// Uri throws FileUriExposedException on API 24+. Used in Phase 5.
+-->
+<paths>
+    <cache-path
+        name="camera_images"
+        path="images/" />
+</paths>

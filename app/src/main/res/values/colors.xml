@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    The raw brand palette. These are the only literal hex values in the project.
+    Themes map them to Material3 colour roles - layouts reference ?attr/... or a semantic
+    colour, never one of these directly unless it is genuinely a fixed brand accent.
+-->
 <resources>
-    <color name="black">#FF000000</color>
+
+    <!-- Brand palette, from the approved deck (SPEC section 7) -->
+    <color name="mint">#FF5FE3A1</color>
+    <color name="mint_pressed">#FF3FC985</color>
+    <color name="mint_on_light">#FF12A063</color>
+    <color name="ink">#FF0E1726</color>
+    <color name="navy">#FF17233A</color>
+    <color name="navy_elevated">#FF223150</color>
+    <color name="cloud">#FFF4F6FA</color>
+    <color name="text_high">#FFF2F6FB</color>
+    <color name="text_muted">#FF97A6BF</color>
+    <color name="danger">#FFFF6B6B</color>
+
+    <!--
+        Neutrals needed to build the light theme; the deck only specifies the dark side.
+        Derived to satisfy the 4.5:1 body-text rule in SPEC section 7 - measured contrast
+        against @color/cloud is noted per colour.
+    -->
     <color name="white">#FFFFFFFF</color>
+    <color name="surface_light">#FFFFFFFF</color>
+    <color name="text_on_light_high">#FF0E1726</color>
+    <color name="text_on_light_muted">#FF5A6B85</color>
+    <color name="outline_light">#FFD9E0EA</color>
+    <color name="danger_on_light">#FFD32F3F</color>
+
 </resources>
