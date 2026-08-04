@@ -3,13 +3,23 @@ package com.roeiamor.fitshare.di
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.roeiamor.fitshare.BuildConfig
 import com.roeiamor.fitshare.data.remote.AuthDataSource
+import com.roeiamor.fitshare.data.remote.CloudinaryApi
+import com.roeiamor.fitshare.data.remote.CloudinaryImageUploader
+import com.roeiamor.fitshare.data.remote.ImageUploader
 import com.roeiamor.fitshare.data.remote.UserDataSource
 import com.roeiamor.fitshare.data.remote.WorkoutDataSource
 import com.roeiamor.fitshare.data.repository.AuthRepository
 import com.roeiamor.fitshare.data.repository.AuthRepositoryImpl
 import com.roeiamor.fitshare.data.repository.WorkoutRepository
 import com.roeiamor.fitshare.data.repository.WorkoutRepositoryImpl
+import com.roeiamor.fitshare.util.ImageCompressor
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 /**
  * The project's dependency container, written by hand instead of using Hilt or Koin.
@@ -46,6 +56,46 @@ object ServiceLocator {
 
     private val workoutDataSource: WorkoutDataSource by lazy { WorkoutDataSource(firestore) }
 
+    // ---- Cloudinary ------------------------------------------------------------------------
+
+    /**
+     * The HTTP client behind Retrofit.
+     *
+     * Uploads carry a photo over mobile data, so the timeouts are deliberately longer than OkHttp's
+     * ten-second defaults - a slow connection should be slow, not a failure. Request logging is
+     * added only in debug builds, so a release APK never prints upload URLs to logcat.
+     */
+    private val okHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(UPLOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(UPLOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(
+                        HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
+                    )
+                }
+            }
+            .build()
+    }
+
+    private val cloudinaryApi: CloudinaryApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(CLOUDINARY_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(CloudinaryApi::class.java)
+    }
+
+    private val imageCompressor: ImageCompressor by lazy { ImageCompressor(requireContext()) }
+
+    /** Swapping storage providers means changing this one line (SPEC section 1). */
+    private val imageUploader: ImageUploader by lazy {
+        CloudinaryImageUploader(cloudinaryApi, imageCompressor)
+    }
+
     // ---- Repositories ----------------------------------------------------------------------
 
     /** Accounts and sessions. Exposed as the interface so callers cannot reach Firebase through it. */
@@ -55,9 +105,9 @@ object ServiceLocator {
 
     // ---- ViewModels ------------------------------------------------------------------------
 
-    /** Reading workouts. Exposed as the interface so callers cannot reach Firestore through it. */
+    /** Reading and publishing workouts. Exposed as the interface, never the implementation. */
     val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(workoutDataSource)
+        WorkoutRepositoryImpl(workoutDataSource, userDataSource, authDataSource, imageUploader)
     }
 
     /** The single factory every Fragment uses to obtain its ViewModel. */
@@ -85,4 +135,8 @@ object ServiceLocator {
         }
         return applicationContext
     }
+
+    private const val CLOUDINARY_BASE_URL = "https://api.cloudinary.com/"
+    private const val CONNECT_TIMEOUT_SECONDS = 15L
+    private const val UPLOAD_TIMEOUT_SECONDS = 60L
 }

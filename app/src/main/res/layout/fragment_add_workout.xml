@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Add workout. Phase 5 adds the image picker, the form fields and the category and difficulty chips. -->
+<!--
+    Publish a workout (SPEC section 5).
+
+    The category and difficulty chips are generated in code from their enums, exactly as on the feed,
+    so the options cannot drift from the model and every label still comes from the single mapping
+    function in ui/common/EnumLabels.kt.
+
+    The photo slot is a 16:9 ShapeableImageView showing either the chosen photo or the placeholder,
+    so the empty state and the filled state are the same shape and the form does not jump.
+-->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -9,10 +19,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:orientation="vertical"
         android:paddingStart="@dimen/screen_padding_horizontal"
-        android:paddingTop="@dimen/space_xxl"
+        android:paddingTop="@dimen/space_lg"
         android:paddingEnd="@dimen/screen_padding_horizontal"
         android:paddingBottom="@dimen/space_xxl">
 
@@ -23,14 +32,170 @@
             android:text="@string/add_title"
             android:textAlignment="center" />
 
+        <!-- ===== Photo ===== -->
+
+        <!-- Fixed height, not a 16:9 constraint: layout_constraintDimensionRatio only works
+             inside a ConstraintLayout, and this form is a vertical LinearLayout. -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/workoutImage"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/image_picker_height"
+            android:layout_marginTop="@dimen/space_lg"
+            android:contentDescription="@string/cd_workout_image"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder_workout"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.FitShare.Card" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/choosePhoto"
+            style="@style/Widget.FitShare.Button.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/add_photo" />
+
+        <!-- ===== Fields ===== -->
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/titleLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:hint="@string/add_workout_name"
+            app:counterEnabled="true"
+            app:counterMaxLength="60"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/titleInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext|flagNoExtractUi"
+                android:inputType="textCapSentences"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/descriptionLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:hint="@string/add_description"
+            app:counterEnabled="true"
+            app:counterMaxLength="600"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/descriptionInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:imeOptions="flagNoExtractUi"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="3" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/durationLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:hint="@string/add_duration"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/durationInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone|flagNoExtractUi"
+                android:inputType="number"
+                android:maxLines="1"
+                android:textDirection="ltr" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- ===== Category ===== -->
+
+        <TextView
+            style="@style/TextAppearance.FitShare.Label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/add_category" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/categoryChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true" />
+
+        </HorizontalScrollView>
+
+        <!-- ===== Difficulty ===== -->
+
+        <TextView
+            style="@style/TextAppearance.FitShare.Label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/add_difficulty" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/difficultyChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true" />
+
+        <!-- ===== Publish ===== -->
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/publishWorkout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_lg"
+            android:layout_marginTop="@dimen/space_xl"
             android:minHeight="@dimen/touch_target_min"
             android:text="@string/add_publish"
             app:shapeAppearance="@style/ShapeAppearance.FitShare.Button" />
+
+        <LinearLayout
+            android:id="@+id/uploadProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                app:indicatorSize="24dp" />
+
+            <TextView
+                style="@style/TextAppearance.FitShare.Label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_sm"
+                android:text="@string/add_uploading" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </ScrollView>

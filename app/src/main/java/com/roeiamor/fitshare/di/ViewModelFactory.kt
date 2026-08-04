@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.roeiamor.fitshare.data.repository.AuthRepository
 import com.roeiamor.fitshare.data.repository.WorkoutRepository
+import com.roeiamor.fitshare.ui.addworkout.AddWorkoutViewModel
 import com.roeiamor.fitshare.ui.auth.ForgotPasswordViewModel
 import com.roeiamor.fitshare.ui.feed.FeedViewModel
 import com.roeiamor.fitshare.ui.auth.LoginViewModel
@@ -48,6 +49,9 @@ class ViewModelFactory(
 
             modelClass.isAssignableFrom(FeedViewModel::class.java) ->
                 FeedViewModel(workoutRepository)
+
+            modelClass.isAssignableFrom(AddWorkoutViewModel::class.java) ->
+                AddWorkoutViewModel(workoutRepository)
 
             else -> throw IllegalArgumentException(
                 "ViewModelFactory has no branch for ${modelClass.name}. Add one."

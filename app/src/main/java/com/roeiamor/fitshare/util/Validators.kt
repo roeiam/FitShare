@@ -67,6 +67,54 @@ object Validators {
         else -> null
     }
 
+    // ---- Workout form (SPEC section 3) ------------------------------------------------------
+
+    private const val MIN_TITLE_LENGTH = 3
+    private const val MAX_TITLE_LENGTH = 60
+    private const val MAX_DESCRIPTION_LENGTH = 600
+    private const val MIN_DURATION_MINUTES = 1
+    private const val MAX_DURATION_MINUTES = 600
+
+    /** Checks a workout title: required, 3-60 characters after trimming. */
+    @StringRes
+    fun validateWorkoutTitle(title: String): Int? {
+        val trimmed = title.trim()
+        return when {
+            trimmed.isEmpty() -> R.string.error_required_field
+            trimmed.length !in MIN_TITLE_LENGTH..MAX_TITLE_LENGTH -> R.string.error_title_length
+            else -> null
+        }
+    }
+
+    /** Checks a description: optional, but at most 600 characters. */
+    @StringRes
+    fun validateDescription(description: String): Int? =
+        if (description.trim().length > MAX_DESCRIPTION_LENGTH) {
+            R.string.error_description_length
+        } else {
+            null
+        }
+
+    /**
+     * Checks the duration field.
+     *
+     * Takes the raw text rather than an Int because "not a number at all" and "a number out of
+     * range" are both errors the user can make, and the field cannot produce an Int for the first.
+     * `toIntOrNull` also absorbs a value too large for an Int, which a numeric keyboard allows.
+     */
+    @StringRes
+    fun validateDuration(durationText: String): Int? {
+        val trimmed = durationText.trim()
+        if (trimmed.isEmpty()) return R.string.error_required_field
+
+        val minutes = trimmed.toIntOrNull() ?: return R.string.error_duration_range
+        return if (minutes in MIN_DURATION_MINUTES..MAX_DURATION_MINUTES) {
+            null
+        } else {
+            R.string.error_duration_range
+        }
+    }
+
     /**
      * A deliberately ordinary email pattern: some characters, an @, a domain, a dot, a suffix of at
      * least two letters. It is not RFC 5322 - no client-side regex usefully is - and it does not

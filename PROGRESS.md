@@ -209,18 +209,31 @@ Full write-up in `PHASE4_REPORT.md`.
 - `util/TimeFormatter.kt` with 10 unit tests; Hebrew plurals for minutes, hours and duration
 - `firestore.indexes.json`
 
-### Open item that needs Roei
+### Composite index — resolved
 
-**The category filter needs a Firestore composite index**, which only a project owner can create.
-The query is verifiably correct — Firestore echoed `workouts where category==STRENGTH order by
--createdAt` — and the app shows its Hebrew error state rather than crashing. The one-click URL is in
-`PHASE4_REPORT.md` §6, and `firestore.indexes.json` covers it for `firebase deploy`.
+The category filter needs a Firestore composite index (category + createdAt), which only a project
+owner can create. **Roei created it in the console and confirmed the filter end to end on a physical
+device.** `firestore.indexes.json` is committed so the index is reproducible with
+`firebase deploy --only firestore:indexes` on a fresh project.
 
 ### Verified on the device
 
 Four workouts seeded into Firestore, including one with no image and one with a very long Hebrew
-title. **The feed updated live, with the app running and untouched** — proven when the seed data was
-rewritten from corrupt to correct and the cards changed on screen. Search matches and non-matches,
+title.
+
+**The feed updated live, with the app running and untouched.** This is the demo-video moment. The
+first seeding pass wrote the Hebrew through PowerShell, which encoded the request body as ASCII, so
+Firestore genuinely stored `????? ??? ???? ??? ?????` — confirmed by reading the document back over
+REST — and the app faithfully rendered that. Rewriting the same four documents as UTF-8, **without
+touching the app or restarting it**, made the cards change on screen within seconds: the title
+became "אימון כוח לפלג גוף עליון" and the author "רועי עמור". That is the Firestore
+`snapshotListener` and `DiffUtil` demonstrated rather than asserted, and it is worth showing exactly
+that way in the video: edit a document in the console, watch the running app update itself.
+
+The category filter was afterwards confirmed end to end by Roei on a physical device, once the
+composite index had been created in the Firebase console.
+
+Also verified: Search matches and non-matches,
 the two different empty states, pull to refresh, rotation, card tap into details, and no listener
 accumulation over 8 navigation cycles (Views 334 → 132, Activities → 1). 34 unit tests pass.
 
@@ -234,6 +247,73 @@ Rotating with a text field focused made the field take over the whole screen —
 
 - Hebrew **plurals** replace SPEC §8's `לפני %d דקות`, which renders "לפני 1 דקות".
 - `FeedSort` exists in the data layer but has no UI control — sorting is SPEC feature 19, an extra.
+
+---
+
+## Phase 5 — Create a workout (done)
+
+**Goal:** publish a workout with a photo, atomically, with every failure path handled.
+Full write-up in `PHASE5_REPORT.md`.
+
+### Built, in the required order
+
+1. `util/ImageCompressor.kt` — `inSampleSize`, 1080px cap, JPEG 80, cacheDir, plus EXIF rotation.
+   The sizing maths is extracted over an Android-free `ImageDimensions` and covered by 13 JVM tests.
+2. `CloudinaryApi` (Retrofit multipart), `CloudinaryUploadResponse`, `CloudinaryImageUploader`
+   behind the `ImageUploader` interface; cloud name and unsigned preset from `BuildConfig`.
+3. **Gallery first** — `PickVisualMedia`, built and confirmed publishing end to end on the device
+   before any camera code existed.
+4. **Then camera** — `TakePicture` + FileProvider + runtime permission that degrades gracefully.
+5. The form with validation, generated category/difficulty chips, upload progress, and a failure
+   path that leaves every field filled.
+6. Workout document + `workoutsCount` in a single `WriteBatch`.
+
+### Verified end to end
+
+Published from the gallery and confirmed on both servers: the Firestore document (id mirrored,
+author denormalized, server `createdAt`, Cloudinary `secure_url`) and **`workoutsCount` 0 → 1**.
+Compression measured: **1600×1200 / 223 KB → 1080×810 / 120 KB**.
+
+Failure paths: cancelled picker, denied camera permission, network killed mid-upload, fully offline,
+and an invalid form. All show the right Hebrew message, and **after two failed publishes there were
+zero new documents and `workoutsCount` was unchanged** — the upload-before-write ordering leaves no
+partial state. 47 unit tests pass, no crashes.
+
+Fixed a defect found on the device: `MaterialButton` ignores `android:drawableStart`, so the bottom
+sheet's icons were invisible until they moved to `app:icon`.
+
+### Note for later
+
+The connected physical device is a **Samsung SM-A305F on Android 11 (API 30)**. It is a valuable
+compatibility target: below API 33 the locale fix from Phase 2 runs through AppCompat's
+`AppLocalesMetadataHolderService` rather than the system `LocaleManager` (which does not exist
+there), and `PickVisualMedia` falls back to `ACTION_OPEN_DOCUMENT`. Neither path has been exercised
+yet — the device was locked during Phase 5 and was deliberately left alone.
+
+---
+
+## Known open defects
+
+### 1. Offline registration hangs on the spinner forever — fix in Phase 7
+
+**Found on a physical device with no internet.** Registration shows the progress indicator and never
+stops. No error, no timeout, no way out except backing out of the screen.
+
+**Cause.** The Firestore SDK is offline-first: when the server is unreachable it accepts a write into
+its local queue and only resolves the `Task` once the server acknowledges it. `await()` on that
+`Task` therefore never returns while offline. Firebase Auth surfaces a network error properly — it
+is the `users/{uid}` write in `AuthRepositoryImpl.register` that hangs. Nothing is broken in
+`safeCall` or `ErrorMapper`; there simply is no failure to map, because the SDK has not failed.
+
+**Scope of the problem.** It is not specific to registration. **Every network-bound repository call
+that writes to Firestore can wait forever offline** — publishing a workout, liking, commenting,
+saving a favourite, editing a profile.
+
+**Planned fix, Phase 7**, alongside the "no connection" banner (SPEC feature 18): wrap network-bound
+repository calls in `withTimeout`, so a call that cannot complete becomes a real failure that
+`ErrorMapper` turns into `error_no_network`. The UI must never be able to wait indefinitely.
+
+**Deliberately not fixed in Phase 5** — recorded here so it is not lost.
 
 ---
 

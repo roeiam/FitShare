@@ -28,6 +28,7 @@
     <dimen name="touch_target_min">48dp</dimen>
     <dimen name="icon_size">24dp</dimen>
     <dimen name="state_icon_size">72dp</dimen>
+    <dimen name="image_picker_height">200dp</dimen>
     <dimen name="elevation_card">0dp</dimen>
 
     <!-- Text sizes (SPEC section 7) -->

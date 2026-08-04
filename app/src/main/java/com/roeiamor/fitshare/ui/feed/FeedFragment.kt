@@ -7,13 +7,13 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.chip.Chip
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Workout
 import com.roeiamor.fitshare.data.model.WorkoutCategory
 import com.roeiamor.fitshare.databinding.FragmentFeedBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
+import com.roeiamor.fitshare.ui.common.ChipBuilder
 import com.roeiamor.fitshare.ui.common.StateRenderer
 import com.roeiamor.fitshare.ui.common.labelRes
 
@@ -65,42 +65,23 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
     }
 
     /**
-     * Builds the filter row from [WorkoutCategory] plus an "הכל" chip.
+     * Builds the filter row from [WorkoutCategory] plus a leading "הכל" chip.
      *
      * Generated rather than written in XML so the chips cannot drift from the enum, and so every
      * label still comes from the single mapping function in `ui/common/EnumLabels.kt`.
+     * The add-workout form builds its two chip rows the same way, through the same helper.
      */
     private fun setUpCategoryChips() {
-        val group = binding.categoryChips
-        group.removeAllViews()
-
-        group.addView(buildCategoryChip(id = CHIP_ID_ALL, labelRes = R.string.feed_filter_all))
-        WorkoutCategory.entries.forEachIndexed { index, category ->
-            group.addView(buildCategoryChip(id = CHIP_ID_ALL + 1 + index, labelRes = category.labelRes()))
-        }
-        group.check(CHIP_ID_ALL)
-
-        group.setOnCheckedStateChangeListener { _, checkedIds ->
-            val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
-            val category = WorkoutCategory.entries.getOrNull(checkedId - CHIP_ID_ALL - 1)
-            viewModel.onCategorySelected(category)
-        }
+        ChipBuilder.buildSingleSelection(
+            group = binding.categoryChips,
+            baseId = CHIP_ID_ALL,
+            leadingLabelRes = R.string.feed_filter_all,
+            entryLabels = WorkoutCategory.entries.map { it.labelRes() },
+            // -1 selects the leading chip, so the feed opens unfiltered.
+            checkedIndex = -1,
+            onSelected = { index -> viewModel.onCategorySelected(WorkoutCategory.entries.getOrNull(index)) }
+        )
     }
-
-    private fun buildCategoryChip(id: Int, labelRes: Int): Chip =
-        Chip(requireContext(), null, com.google.android.material.R.attr.chipStyle).apply {
-            this.id = id
-            setChipDrawable(
-                com.google.android.material.chip.ChipDrawable.createFromAttributes(
-                    requireContext(),
-                    null,
-                    0,
-                    R.style.Widget_FitShare_Chip_Filter
-                )
-            )
-            setText(labelRes)
-            isCheckable = true
-        }
 
     private fun setUpSearch() {
         binding.searchInput.doAfterTextChanged {

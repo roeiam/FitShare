@@ -87,6 +87,9 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.swiperefreshlayout)
+    // Reads the orientation tag a camera writes into a JPEG. Without it, photos taken in portrait
+    // upload sideways, because BitmapFactory ignores EXIF.
+    implementation(libs.androidx.exifinterface)
     implementation(libs.material)
 
     // MVVM: ViewModel + LiveData

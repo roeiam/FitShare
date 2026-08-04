@@ -13,6 +13,7 @@ fragmentKtx = "1.8.9"
 constraintlayout = "2.2.1"
 recyclerview = "1.4.0"
 swiperefreshlayout = "1.2.0"
+exifinterface = "1.4.2"
 lifecycle = "2.11.0"
 navigation = "2.9.8"
 material = "1.14.0"
@@ -43,6 +44,7 @@ androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", ve
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 # --- Lifecycle (ViewModel + LiveData) ------------------------------------
