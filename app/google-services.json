@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "212702291165",
+    "project_id": "fitshare-7ddbe",
+    "storage_bucket": "fitshare-7ddbe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212702291165:android:42289e67e304aecb0f2734",
+        "android_client_info": {
+          "package_name": "com.roeiamor.fitshare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUzCtvEPA5c9-lw8EaGB6Ewd9qDffERs4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
