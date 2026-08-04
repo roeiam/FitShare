@@ -69,10 +69,6 @@ class AddWorkoutViewModel(
      */
     val prefill: LiveData<Event<WorkoutDraft>> = _prefill
 
-    init {
-        if (editingWorkoutId != null) loadExistingWorkout(editingWorkoutId)
-    }
-
     /** Loads the workout being edited and asks the Fragment to fill the form with it. */
     private fun loadExistingWorkout(workoutId: String) {
         viewModelScope.launch {
@@ -128,6 +124,19 @@ class AddWorkoutViewModel(
     private var title: String = ""
     private var description: String = ""
     private var durationText: String = ""
+
+    /**
+     * Loads the workout when this screen opens in edit mode.
+     *
+     * **This block must stay below every property it touches.** Kotlin runs initialisers and `init`
+     * blocks in declaration order, so an `init` placed above `_uiState` runs while that field is
+     * still null - which crashed the app with a NullPointerException the moment the edit button was
+     * pressed. It compiled cleanly and only ever failed in edit mode, so it took running the screen
+     * on a device to find.
+     */
+    init {
+        if (editingWorkoutId != null) loadExistingWorkout(editingWorkoutId)
+    }
 
     /** Called on every keystroke in the title field. */
     fun onTitleChanged(value: String) {
