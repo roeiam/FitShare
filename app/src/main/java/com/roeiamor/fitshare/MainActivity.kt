@@ -1,19 +1,25 @@
 package com.roeiamor.fitshare
 
+import android.graphics.Rect
 import android.os.Bundle
+import android.view.MotionEvent
+import android.view.View
+import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
+import androidx.core.view.isGone
 import androidx.core.view.updatePadding
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.roeiamor.fitshare.databinding.ActivityMainBinding
 import com.roeiamor.fitshare.di.ServiceLocator
+import com.roeiamor.fitshare.util.hideKeyboard
+import com.roeiamor.fitshare.util.requestVisibleAboveKeyboard
 
 /**
  * The only Activity in the app. It hosts the navigation graph and the bottom navigation bar and
@@ -33,6 +39,14 @@ class MainActivity : AppCompatActivity() {
         R.id.registerFragment,
         R.id.forgotPasswordFragment
     )
+
+    /**
+     * Two independent reasons to hide the bottom bar, kept as state rather than each listener
+     * setting visibility directly. Two listeners writing the same property would fight: whichever
+     * fired last would win, and opening the keyboard on the login screen would bring the bar back.
+     */
+    private var isAuthDestination = false
+    private var isKeyboardVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,22 +80,82 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Pads the layout away from the status and navigation bars.
+     * Pads the layout away from the system bars, and makes room for the keyboard.
      *
-     * The app draws edge to edge, which the system enforces from API 35, so without this the top of
-     * every screen would sit under the clock and the bottom bar under the gesture handle.
+     * The app draws edge to edge, which the system enforces from API 35. That also means
+     * `adjustResize` no longer resizes anything by itself - once the window stops fitting system
+     * windows, the IME inset has to be applied by hand, which is what this does.
      *
-     * The bottom inset goes on the navigation bar itself rather than on the root. Padding the root
-     * would leave a strip of background below the bar; padding the bar lets its own surface colour
-     * run to the bottom of the screen while its items still sit above the gesture handle.
+     * Three deliberate choices, all of them fixing something that looked wrong on a real device:
+     *
+     *  - The bottom system-bar inset goes on the **navigation bar**, not the root. Padding the root
+     *    would leave a strip of page background below the bar.
+     *  - The bottom navigation is **hidden while the keyboard is open**. Keeping it stacked above
+     *    the keyboard steals a row of height from an already short form and cannot be tapped
+     *    meaningfully mid-typing anyway.
+     *  - The IME inset is applied to the **nav host**, so the form scrolls inside the space that is
+     *    left instead of the whole screen being squashed upwards.
      */
     private fun applySystemBarInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { view, windowInsets ->
             val bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            val keyboardVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime())
+
             view.updatePadding(left = bars.left, top = bars.top, right = bars.right)
+
             binding.bottomNav.updatePadding(bottom = bars.bottom)
+
+            isKeyboardVisible = keyboardVisible
+            updateBottomNavVisibility()
+
+            // The full IME inset, not the inset minus the system bars. While the keyboard is open
+            // the bottom navigation is hidden, so the nav host runs to the true bottom of the
+            // screen and nothing else is absorbing that space. Subtracting the system-bar inset
+            // here - which an earlier version did - left the focused field about twenty pixels
+            // behind the top of the keyboard on the physical device.
+            binding.navHostFragment.updatePadding(
+                bottom = if (keyboardVisible) ime.bottom else 0
+            )
+
+            // Scroll the focused field clear of the keyboard *here*, not when it gained focus.
+            // This is the first moment the layout knows how tall the keyboard is; asking earlier
+            // scrolls against the pre-keyboard layout and leaves the field half covered, which is
+            // exactly what it did on the physical device before this was moved.
+            if (keyboardVisible) currentFocus?.requestVisibleAboveKeyboard()
+
             windowInsets
         }
+    }
+
+    /** The bottom bar is hidden on the auth screens, and while the keyboard is up. */
+    private fun updateBottomNavVisibility() {
+        binding.bottomNav.isGone = isAuthDestination || isKeyboardVisible
+    }
+
+    /**
+     * Dismisses the keyboard when the user taps anywhere outside the field they are typing in.
+     *
+     * Done here, once, rather than per screen: it needs the raw touch stream before any view has
+     * consumed it, and this is the only Activity, so every screen and every dialog it hosts is
+     * covered by this one override.
+     */
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            val focused = currentFocus
+            if (focused is EditText && !focused.containsTouch(event)) {
+                focused.clearFocus()
+                focused.hideKeyboard()
+            }
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
+    /** True when [event] landed inside this view's bounds on screen. */
+    private fun View.containsTouch(event: MotionEvent): Boolean {
+        val bounds = Rect()
+        getGlobalVisibleRect(bounds)
+        return bounds.contains(event.rawX.toInt(), event.rawY.toInt())
     }
 
     /**
@@ -109,7 +183,8 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNav.setupWithNavController(navController)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.isVisible = destination.id !in authDestinations
+            isAuthDestination = destination.id in authDestinations
+            updateBottomNavVisibility()
         }
     }
 }

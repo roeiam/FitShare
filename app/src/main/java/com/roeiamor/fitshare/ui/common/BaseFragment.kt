@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 
@@ -53,6 +54,19 @@ abstract class BaseFragment<VB : ViewBinding> : Fragment() {
     ): View {
         _binding = inflateBinding(inflater, container)
         return binding.root
+    }
+
+    /**
+     * Applies the app-wide keyboard behaviour to whatever fields this screen happens to have.
+     *
+     * Done here rather than per screen so a form cannot be built that forgets it - a new screen gets
+     * a "done" affordance on its multi-line fields and scroll-into-view on focus simply by existing.
+     * Called before the subclass's own `onViewCreated` work, which is free to override any of it.
+     */
+    @CallSuper
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        FormKeyboardSupport.apply(view)
     }
 
     override fun onDestroyView() {

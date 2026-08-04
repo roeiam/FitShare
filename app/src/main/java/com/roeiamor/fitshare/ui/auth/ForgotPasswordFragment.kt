@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import com.roeiamor.fitshare.databinding.FragmentForgotPasswordBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
+import com.roeiamor.fitshare.util.onImeDone
 import com.roeiamor.fitshare.util.setErrorRes
 import com.roeiamor.fitshare.util.showSnackbar
 
@@ -35,6 +36,7 @@ class ForgotPasswordFragment : BaseFragment<FragmentForgotPasswordBinding>() {
     /** Sends every keystroke and tap to the ViewModel. */
     private fun bindInputs() {
         binding.emailInput.doAfterTextChanged { viewModel.onEmailChanged(it?.toString().orEmpty()) }
+        binding.emailInput.onImeDone { viewModel.onSubmit() }
         binding.forgotSubmit.setOnClickListener { viewModel.onSubmit() }
     }
 
