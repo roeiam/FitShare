@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Shared error state. Included by every screen, never copied (SPEC section 5).
+    The message is set at runtime from util/ErrorMapper, so it says what actually went wrong
+    rather than a vague "something failed". The retry button is always offered.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/space_xl"
+    android:visibility="gone">
+
+    <ImageView
+        android:layout_width="@dimen/state_icon_size"
+        android:layout_height="@dimen/state_icon_size"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_error_state" />
+
+    <TextView
+        style="@style/TextAppearance.FitShare.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:gravity="center"
+        android:text="@string/state_error_title"
+        android:textAlignment="center" />
+
+    <TextView
+        android:id="@+id/errorMessage"
+        style="@style/TextAppearance.FitShare.Body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:gravity="center"
+        android:textAlignment="center" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/errorRetry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xl"
+        android:minHeight="@dimen/touch_target_min"
+        android:text="@string/action_retry"
+        app:shapeAppearance="@style/ShapeAppearance.FitShare.Button" />
+
+</LinearLayout>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The locales this app ships. Referenced from the manifest as android:localeConfig.
+
+    From API 33 the per-app language API is owned by the system LocaleManager, and the system needs
+    this list to accept a per-app locale for us. Hebrew is first because it is the default and the
+    only language the UI is actually designed for; English exists to show the strings are
+    externalised (see values-en/strings.xml).
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="he" />
+    <locale android:name="en" />
+</locale-config>

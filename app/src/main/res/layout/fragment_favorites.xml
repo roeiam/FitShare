@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Favorites. Phase 7 fills the content container with the saved-workouts list.
+
+    The four states from SPEC section 5 live here: the content container plus the three shared
+    state layouts, included rather than copied. ui/common/StateRenderer decides which one shows.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_padding_horizontal"
+            android:paddingEnd="@dimen/screen_padding_horizontal"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/stateLoading"
+            layout="@layout/layout_state_loading" />
+
+        <include
+            android:id="@+id/stateEmpty"
+            layout="@layout/layout_state_empty" />
+
+        <include
+            android:id="@+id/stateError"
+            layout="@layout/layout_state_error" />
+
+    </FrameLayout>
+
+</LinearLayout>

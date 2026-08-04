@@ -20,6 +20,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FitShare">
@@ -34,6 +35,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            Required by AppCompatDelegate.setApplicationLocales. AppCompat reaches the app context
+            through this service to persist the chosen locale and, below API 33, to reapply it on
+            every launch. Without it the call is silently dropped and the app falls back to the
+            device language - which is exactly what happened before this was added.
+            It is declared disabled on purpose: it is never started, only read as a metadata holder.
+        -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
 
         <!--
             Hands the camera app a content:// Uri to write the photo into.

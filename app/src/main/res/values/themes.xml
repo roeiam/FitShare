@@ -17,6 +17,9 @@
         <item name="colorOnPrimaryContainer">@color/ink</item>
         <item name="colorSecondary">@color/mint_on_light</item>
         <item name="colorOnSecondary">@color/ink</item>
+        <!-- Drives the bottom navigation's active pill -->
+        <item name="colorSecondaryContainer">@color/mint</item>
+        <item name="colorOnSecondaryContainer">@color/ink</item>
 
         <!-- Surfaces -->
         <item name="android:colorBackground">@color/cloud</item>
@@ -25,6 +28,8 @@
         <item name="colorOnSurface">@color/text_on_light_high</item>
         <item name="colorSurfaceVariant">@color/cloud</item>
         <item name="colorOnSurfaceVariant">@color/text_on_light_muted</item>
+        <!-- Bottom navigation background -->
+        <item name="colorSurfaceContainer">@color/surface_light</item>
         <item name="colorOutline">@color/outline_light</item>
         <item name="colorOutlineVariant">@color/outline_light</item>
 

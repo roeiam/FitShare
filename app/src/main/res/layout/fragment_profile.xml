@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Profile - serves both my own profile and another user's, chosen by the nullable userId
+    argument. Phase 7 fills the content container with the avatar, name, bio, the three stats
+    and the grid of workouts.
+
+    The four states from SPEC section 5 live here: the content container plus the three shared
+    state layouts, included rather than copied. ui/common/StateRenderer decides which one shows.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_padding_horizontal"
+            android:paddingEnd="@dimen/screen_padding_horizontal"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/stateLoading"
+            layout="@layout/layout_state_loading" />
+
+        <include
+            android:id="@+id/stateEmpty"
+            layout="@layout/layout_state_empty" />
+
+        <include
+            android:id="@+id/stateError"
+            layout="@layout/layout_state_error" />
+
+    </FrameLayout>
+
+    <!--
+        Shown only on my own profile; hidden when viewing someone else's (SPEC section 5).
+        This is the real control, not scaffolding - Phase 7 moves it next to the avatar and adds
+        the theme toggle and logout beside it.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/editProfile"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_padding_horizontal"
+        android:layout_marginEnd="@dimen/screen_padding_horizontal"
+        android:layout_marginBottom="@dimen/space_sm"
+        android:minHeight="@dimen/touch_target_min"
+        android:text="@string/profile_edit" />
+
+</LinearLayout>

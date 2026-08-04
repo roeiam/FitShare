@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The single navigation graph for the whole app (SPEC section 5).
+
+    No app:startDestination is set here on purpose. MainActivity picks it at runtime - feed when a
+    session already exists, login otherwise - so the graph is inflated once, in code, with the right
+    start destination. Declaring one here as well would briefly show the wrong screen on launch.
+
+    Nine destinations, not ten: there is no separate UserProfileFragment. profileFragment takes a
+    nullable userId argument and serves both "my profile" and "someone else's profile".
+-->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph">
+
+    <!-- ===================== Auth ===================== -->
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.roeiamor.fitshare.ui.auth.LoginFragment"
+        android:label="@string/login_title"
+        tools:layout="@layout/fragment_login">
+
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/registerFragment" />
+
+        <action
+            android:id="@+id/action_login_to_forgotPassword"
+            app:destination="@id/forgotPasswordFragment" />
+
+        <!--
+            Signing in clears the whole auth flow off the back stack, so pressing Back from the
+            feed exits the app instead of returning to the login screen (SPEC section 5).
+        -->
+        <action
+            android:id="@+id/action_login_to_feed"
+            app:destination="@id/feedFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.roeiamor.fitshare.ui.auth.RegisterFragment"
+        android:label="@string/register_title"
+        tools:layout="@layout/fragment_register">
+
+        <action
+            android:id="@+id/action_register_to_feed"
+            app:destination="@id/feedFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/forgotPasswordFragment"
+        android:name="com.roeiamor.fitshare.ui.auth.ForgotPasswordFragment"
+        android:label="@string/forgot_title"
+        tools:layout="@layout/fragment_forgot_password" />
+
+    <!-- ===================== Main tabs ===================== -->
+
+    <fragment
+        android:id="@+id/feedFragment"
+        android:name="com.roeiamor.fitshare.ui.feed.FeedFragment"
+        android:label="@string/feed_title"
+        tools:layout="@layout/fragment_feed">
+
+        <action
+            android:id="@+id/action_feed_to_workoutDetails"
+            app:destination="@id/workoutDetailsFragment" />
+
+        <action
+            android:id="@+id/action_feed_to_addWorkout"
+            app:destination="@id/addWorkoutFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.roeiamor.fitshare.ui.favorites.FavoritesFragment"
+        android:label="@string/favorites_title"
+        tools:layout="@layout/fragment_favorites">
+
+        <action
+            android:id="@+id/action_favorites_to_workoutDetails"
+            app:destination="@id/workoutDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addWorkoutFragment"
+        android:name="com.roeiamor.fitshare.ui.addworkout.AddWorkoutFragment"
+        android:label="@string/add_title"
+        tools:layout="@layout/fragment_add_workout" />
+
+    <!--
+        One profile screen for both cases. userId is nullable: null means "my own profile", which is
+        what the bottom navigation tab passes; a real uid means another user's, opened from a
+        workout's author row.
+    -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.roeiamor.fitshare.ui.profile.ProfileFragment"
+        android:label="@string/profile_title"
+        tools:layout="@layout/fragment_profile">
+
+        <argument
+            android:name="userId"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+
+        <action
+            android:id="@+id/action_profile_to_editProfile"
+            app:destination="@id/editProfileFragment" />
+
+        <action
+            android:id="@+id/action_profile_to_workoutDetails"
+            app:destination="@id/workoutDetailsFragment" />
+    </fragment>
+
+    <!-- ===================== Pushed screens ===================== -->
+
+    <fragment
+        android:id="@+id/workoutDetailsFragment"
+        android:name="com.roeiamor.fitshare.ui.details.WorkoutDetailsFragment"
+        android:label="@string/details_title"
+        tools:layout="@layout/fragment_workout_details">
+
+        <argument
+            android:name="workoutId"
+            app:argType="string" />
+
+        <!-- Tapping the author row opens that user's profile, read-only -->
+        <action
+            android:id="@+id/action_workoutDetails_to_profile"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.roeiamor.fitshare.ui.profile.EditProfileFragment"
+        android:label="@string/edit_profile_title"
+        tools:layout="@layout/fragment_edit_profile" />
+
+</navigation>

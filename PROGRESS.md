@@ -75,3 +75,56 @@ later phases only add screens.
 - The Firestore rules cannot bound *how much* `likesCount` changes, only which fields change.
   Enforcing that needs Cloud Functions, which require the paid Blaze plan.
 - `values-en/strings.xml` is never loaded at runtime; it exists to show that no text is hardcoded.
+
+---
+
+## Phase 2 — Navigation and screen skeleton (done)
+
+**Goal:** every screen reachable, every back press sane, no crashes — and the first real RTL check.
+
+Full write-up in `PHASE1_REPORT.md`'s successor, `PHASE2_REPORT.md`.
+
+### Correction applied from Phase 1
+
+Dark is now the default: `AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)` in `FitShareApp`,
+so Phases 2–6 are tuned against the mode the mockups use. Phase 7's `ThemePreferences` overrides it.
+
+### Bug found and fixed during device verification
+
+**The app rendered entirely in English.** `AppCompatDelegate.setApplicationLocales()` called from
+`Application.onCreate()` is a silent no-op on API 33+: AppCompat forwards the call to the system
+`LocaleManager` through an active Activity delegate, and none exists that early. Moved the call to
+`MainActivity.onCreate()`, added `locales_config.xml` and the `AppLocalesMetadataHolderService`.
+Verified: per-app locale `[he]` with the device on `en-US`.
+
+### Built
+
+- `nav_graph.xml` with **9** destinations (not 10 — §4.D merged the two profile screens)
+- `MainActivity` rebuilt: session-based start destination, `setupWithNavController`, bottom bar
+  hidden on auth destinations, window insets
+- `menu_bottom_nav.xml`, `activity_main.xml`
+- `BaseFragment` (ViewBinding lifecycle) and `StateRenderer` (four states, one place)
+- Three shared state layouts, `<include>`d not copied
+- Nine fragments and nine layouts; feed, favorites and profile render the real empty state
+- Six symmetrical vector drawables
+
+### Three device-only defects fixed
+
+Bottom-nav labels (only the selected tab was labelled), the bottom bar not reaching the screen edge,
+and `editProfileFragment` being unreachable — closed with the real edit button, not scaffolding.
+
+### Verified on the emulator (API 35, device language English)
+
+All 9 destinations reached; zero crashes or ANRs; Hebrew renders with the device in English; bottom
+nav reads פיד → מועדפים → הוספה → פרופיל right-to-left; no directional icons exist yet; rotation
+preserves the destination; back unwinds and exits cleanly.
+
+### Still open, deliberately
+
+- `ViewModelFactory` deferred to Phase 3 — with no ViewModels it would be a factory with zero
+  branches that nothing constructs, i.e. dead code.
+- **Light theme untested.** It is fully defined with calculated contrast, but the app forces dark,
+  so it cannot be reached until Phase 7 adds the toggle.
+- Feed's "פרטי האימון" button is Phase 2 scaffolding; Phase 4 deletes it when cards become tappable.
+- Back uses Navigation's per-tab back stack (returns to the previous tab before exiting). Library
+  default, never loops. Change it in Phase 7 if a feed-then-exit model is preferred.

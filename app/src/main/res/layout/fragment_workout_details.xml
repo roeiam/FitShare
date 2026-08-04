@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Workout details. Phase 6 adds the hero image, the tappable author row, the meta chips, the
+    like and favorite buttons, share, and the comments list with its input.
+    Reached from the feed; Back returns there.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_padding_horizontal"
+        android:paddingTop="@dimen/space_xxl"
+        android:paddingEnd="@dimen/screen_padding_horizontal"
+        android:paddingBottom="@dimen/space_xxl">
+
+        <TextView
+            style="@style/TextAppearance.FitShare.Headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/details_title"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
+</ScrollView>

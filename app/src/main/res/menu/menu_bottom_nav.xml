@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Bottom navigation, four items (SPEC section 5): פיד · מועדפים · הוספה · פרופיל
+
+    Each item's id matches a destination id in nav_graph.xml. That is what lets
+    NavigationUI.setupWithNavController wire tab taps, the selected highlight and the back stack
+    without a single manual click listener.
+
+    RTL: this order is written first-to-last, and Android lays the items out right-to-left under a
+    Hebrew locale, so "פיד" ends up on the right. Do not reverse the order here to "fix" it -
+    that would break the layout on an LTR device.
+-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/feedFragment"
+        android:icon="@drawable/ic_feed"
+        android:title="@string/nav_feed" />
+
+    <item
+        android:id="@+id/favoritesFragment"
+        android:icon="@drawable/ic_favorites"
+        android:title="@string/nav_favorites" />
+
+    <item
+        android:id="@+id/addWorkoutFragment"
+        android:icon="@drawable/ic_add"
+        android:title="@string/nav_add" />
+
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@drawable/ic_profile"
+        android:title="@string/nav_profile" />
+
+</menu>
