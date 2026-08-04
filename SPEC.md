@@ -12,7 +12,7 @@
 | Language | Kotlin |
 | UI | **XML layouts + Fragments + ViewBinding** (no Compose, no DataBinding) |
 | Components | Material Components (`com.google.android.material`) |
-| Min SDK / Target | 24 / latest stable |
+| Min SDK / Target / Compile | 24 / 36 / **36** — API 37 is deliberately not installed, see `CLAUDE.md` |
 | Navigation | Navigation Component, single Activity, `nav_graph.xml`, SafeArgs |
 | Architecture | MVVM: Fragment → ViewModel (LiveData) → Repository → DataSource |
 | DI | Hand-written `ServiceLocator` + `ViewModelFactory` (no Hilt) |
@@ -26,6 +26,10 @@
 
 Use BOMs where available: `com.google.firebase:firebase-bom` (v34+, **no `-ktx` artifacts** — KTX was merged into the main modules).
 Enable `buildFeatures { viewBinding = true; buildConfig = true }`.
+
+The exact dependency list, with a justification per line, lives in `PHASE0_PLAN.md` §3.
+Two libraries are pinned back because their newest releases require `compileSdk 37`:
+`androidx.core:core-ktx` at 1.18.0 and `glide` at 5.0.7. Do not upgrade them.
 
 ### Cost model — the project must stay at zero, with no credit card
 - **Firebase Auth**: free, unlimited.
@@ -100,12 +104,24 @@ All model classes need a **no-argument constructor with defaults** so Firestore'
 
 ## 4. Enums
 
+The enums are **plain** — no constructor arguments, no `@StringRes`, no `R`, no Android imports at all.
+`data/model/` must stay Android-free, and an enum carrying an `R.string` reference would break that.
+
 ```kotlin
-enum class WorkoutCategory(@StringRes val labelRes: Int) {
-    STRENGTH, RUNNING, HIIT, YOGA, CYCLING, SWIMMING, CROSSFIT, OTHER
-}
-enum class Difficulty(@StringRes val labelRes: Int) { EASY, MEDIUM, HARD }
+enum class WorkoutCategory { STRENGTH, RUNNING, HIIT, YOGA, CYCLING, SWIMMING, CROSSFIT, OTHER }
+enum class Difficulty { EASY, MEDIUM, HARD }
 ```
+
+Mapping an enum to its Hebrew label happens in **exactly one place** in the UI layer
+(`ui/common/EnumLabels.kt`), as a `@StringRes` lookup:
+
+```kotlin
+@StringRes fun WorkoutCategory.labelRes(): Int = when (this) { ... }
+@StringRes fun Difficulty.labelRes(): Int = when (this) { ... }
+```
+
+Never map an enum to text anywhere else — not in a Fragment, not in an adapter, not inline in a layout.
+
 Hebrew labels: כוח · ריצה · HIIT · יוגה · אופניים · שחייה · קרוספיט · אחר
 Difficulty: קל · בינוני · מאתגר
 
@@ -129,9 +145,18 @@ After login/register: `popUpTo` the auth graph with `inclusive = true` so Back d
 | `AddWorkoutFragment` | `fragment_add_workout.xml` | image picker (camera + gallery), title, description, category chips, duration, difficulty, publish button with progress |
 | `WorkoutDetailsFragment` | `fragment_workout_details.xml` | hero image, title, tappable author row, meta chips, description, like, favorite, share, comments list + input; edit/delete for the owner |
 | `FavoritesFragment` | `fragment_favorites.xml` | saved workouts, remove on long-press |
-| `ProfileFragment` | `fragment_profile.xml` | avatar, name, bio, 3 stats, grid of own workouts, edit, theme toggle, logout |
-| `UserProfileFragment` | reuses `fragment_profile.xml` | read-only view of another user (`userId` arg) |
+| `ProfileFragment` | `fragment_profile.xml` | avatar, name, bio, 3 stats, grid of workouts. **One fragment, nullable `userId` arg** — see below |
 | `EditProfileFragment` | `fragment_edit_profile.xml` | name, bio, avatar |
+
+**There is no separate `UserProfileFragment`.** Two near-identical fragments sharing one layout is exactly the
+duplication the rubric penalises. `ProfileFragment` takes a nullable `userId`:
+
+- `userId == null` → my own profile: edit button, theme toggle and logout are visible.
+- `userId != null` → another user's profile: read-only, those three controls are gone.
+
+**The 3 stats are:** אימונים (`workoutsCount`) · לייקים · מועדפים.
+"לייקים" means **likes received** — the sum of `likesCount` across that user's own workouts. Those workouts are
+already loaded to render the grid, so the number costs zero extra Firestore reads. It is not likes given.
 
 ### Reusable layouts (`<include>` these, do not copy)
 `layout_state_loading.xml` · `layout_state_empty.xml` · `layout_state_error.xml` · `item_workout.xml` · `item_comment.xml` · `item_workout_grid.xml`
@@ -168,7 +193,11 @@ Views bound through `ItemWorkoutBinding`; adapter is `WorkoutAdapter : ListAdapt
 17. Share a workout as text via `Intent.ACTION_SEND`
 18. "No connection" banner
 19. Sort feed: newest / most liked
-20. Pagination (`limit(20)` + load more on scroll)
+
+~~20. Pagination (`limit(20)` + load more on scroll)~~ — **dropped, deliberately.**
+Firestore cannot do substring search, so feed search runs client-side over what is loaded. With pagination the
+user could search for a workout that demonstrably exists and not find it. The feed loads in full instead.
+Do not reintroduce pagination.
 
 Do not exceed this list. The course instructions say an overloaded feature set gets trimmed.
 
@@ -204,7 +233,10 @@ Bundle two Hebrew-designed fonts in `res/font/` and reference them via a `fontFa
 - **Rubik SemiBold** for headings — geometric, strong Hebrew letterforms, matches the logo wordmark
 - **Heebo Regular / Medium** for body and UI — built for Hebrew, holds up at small sizes
 
-Download the `.ttf` files from Google Fonts and commit them. Do not silently fall back to the system font.
+**Roei supplies the `.ttf` files himself** and places them in `res/font/`. They are committed to the repo.
+
+Do **not** download font files, and do **not** substitute a different font. If a font file is missing at build
+time, **stop and report it** — never silently fall back to the system font.
 
 ### The one signature element
 The **like button**: the logo's heart-and-dumbbell mark, animated on tap with a short scale bounce (`ScaleAnimation` or `ViewPropertyAnimator`, ~150ms) and a mint fill, with the counter fading between values. It is the app's identity applied to its core social action. Everything around it stays quiet.
@@ -294,6 +326,9 @@ Relative timestamps in Hebrew (`כרגע`, `לפני 5 דקות`, `לפני 3 ש
 
 1. `AndroidManifest.xml`: `android:supportsRtl="true"`.
 2. Force Hebrew regardless of device language: in `FitShareApp.onCreate`, `AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("he"))`.
+   Because of this, `values-en/strings.xml` is **never loaded at runtime**. It is kept deliberately, to demonstrate
+   that no user-facing text is hardcoded and that the app is translation-ready. The README must say so explicitly,
+   so nobody mistakes it for dead code left behind by accident.
 3. In every layout use `layout_marginStart` / `layout_marginEnd`, `paddingStart` / `paddingEnd`, `layout_constraintStart_*` / `layout_constraintEnd_*`. **Never** `left` / `right`.
 4. `TextView` alignment: `android:textAlignment="viewStart"`, not `gravity="left"`.
 5. Directional drawables (back arrow, chevrons) must mirror — `android:autoMirrored="true"` on the vector, or the `AutoMirrored` Material icon.
@@ -351,6 +386,11 @@ service cloud.firestore {
 
 The "filter by category + order by createdAt desc" query needs a **composite index**. Commit `firestore.indexes.json`, and note in the README that Firestore prints a one-click index-creation link to Logcat the first time the query runs.
 
+**Known limitation, to be stated in the README:** the `update` rule lets any signed-in user change `likesCount`
+and `commentsCount` — including by an arbitrary amount. Rules can restrict *which* fields change, not *by how
+much*. Enforcing that properly needs Cloud Functions, which require the paid Blaze plan, and this project is
+committed to staying on the free Spark plan. Accepted for a course project; be ready to explain it.
+
 ---
 
 ## 11. Cloudinary integration
@@ -362,6 +402,11 @@ The "filter by category + order by createdAt desc" query needs a **composite ind
 - **Compress before uploading:** decode with `inSampleSize`, cap the longest edge at 1080px, JPEG quality 80, write to `cacheDir`. Never upload a raw camera file.
 - Show progress (or at minimum an indeterminate indicator with the button disabled). On failure show `error_image_upload` and **keep the form filled** so nothing is lost.
 - Image picking: `ActivityResultContracts.PickVisualMedia` for gallery, `TakePicture` + `FileProvider` for camera, with a runtime `CAMERA` permission request that degrades gracefully when denied.
+
+**Build order within the phase: gallery first, camera second.** Get the whole gallery path working end to end —
+pick, compress, upload, publish, render in the feed — and only then add the camera on top. The camera path
+(`FileProvider`, a runtime permission, a temp file, denial and cancellation) is the largest crash surface in the
+project, and it must not be able to break an upload path that already works.
 
 ---
 
