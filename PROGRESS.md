@@ -127,4 +127,82 @@ preserves the destination; back unwinds and exits cleanly.
   so it cannot be reached until Phase 7 adds the toggle.
 - Feed's "פרטי האימון" button is Phase 2 scaffolding; Phase 4 deletes it when cards become tappable.
 - Back uses Navigation's per-tab back stack (returns to the previous tab before exiting). Library
-  default, never loops. Change it in Phase 7 if a feed-then-exit model is preferred.
+  default, never loops. **Decision: keep it.** Confirmed after Phase 2; do not change in Phase 7.
+
+---
+
+## Phase 3 — Authentication (done)
+
+**Goal:** real accounts against real Firebase, with Hebrew validation and every failure path handled.
+Full write-up in `PHASE3_REPORT.md`.
+
+### Built
+
+- `data/model/User.kt` — no-arg constructor with defaults so Firestore `toObject()` works
+- `data/remote/AuthDataSource.kt`, `UserDataSource.kt` — every call returns `Result`
+- `data/repository/AuthRepository.kt` — interface + Impl
+- `util/Validators.kt`, `util/ErrorMapper.kt` — both return `@StringRes Int`, both unit tested
+- `util/Event.kt` (one-shot events), `util/SafeCall.kt`, `util/ViewExtensions.kt`
+- `di/ViewModelFactory.kt` — now with real branches
+- Three auth screens fully wired; `ProfileViewModel` (logout only, grows in Phase 7)
+- Session routing; logout via a global nav action that empties the back stack
+
+### Registration: the half-finished-account decision
+
+Registration is two writes — the Auth account, then `users/{uid}` — and Firebase has no transaction
+spanning both. **If the profile write fails, the Auth account is rolled back (deleted)** and the
+original Firestore error is returned, so the user learns what failed and the email is free again.
+Leaving the orphan would give the user an account with no profile, and a retry would then fail with
+a baffling "email already in use".
+
+**If the rollback itself fails** (offline, most likely), the app signs out so it is not left
+half-authenticated and still reports the failure. The account survives without a profile, and
+**`login` repairs it** — a missing document is recreated from the Auth account on next sign-in. So a
+user can never be stuck signed in to an account with no profile.
+
+### Verified on the device, plus server-side
+
+Registered a real account and confirmed it **outside the app** via the Identity Toolkit and Firestore
+REST APIs: the Auth user *and* the `users/{uid}` document with `@ServerTimestamp` populated. Session
+persists across a cold start; logout clears the back stack (Back from login exits). Failure paths all
+show the right Hebrew message: wrong password, email already registered, no network. 24 unit tests
+pass. No crashes or ANRs.
+
+### Light theme check found a real defect
+
+Checked at the end of this phase rather than deferred. `mint_on_light` used **as text** on `cloud`
+measures **3.1:1** — below the 4.5:1 rule in SPEC §7. Added `@color/link_text` (`#0B7A4A`, 5.0:1 on
+light; mint in `values-night`, 11.3:1 on dark) and one `Widget.FitShare.Button.Text` style. The brand
+palette is unchanged — `mint_on_light` still fills buttons, where ink on it measures 5.4:1.
+
+### Two unit-test-only traps, worth knowing
+
+- A `private val` holding Firestore `Code` constants initialised the Firebase enum at class-load and
+  threw `ExceptionInInitializerError` on the JVM. Constants moved inline into the `when` branch.
+- Constructing a real `FirebaseException` in a test hits `TextUtils.isEmpty`, which throws against
+  the stub `android.jar`. Fixed with `testOptions { unitTests { isReturnDefaultValues = true } }`.
+
+### Still open, deliberately
+
+- Test account `roei.test.phase3@example.com` exists in the Firebase project; safe to delete.
+- Password reset **delivery** is unverified — the test address is a reserved `@example.com` domain
+  with no inbox. What is verified is that Firebase accepted the request and returned success.
+
+---
+
+## For the README — known difficulties
+
+These are the things that cost real time and are worth writing up:
+
+1. **`setApplicationLocales` is a silent no-op in `Application.onCreate` on API 33+** (Phase 2).
+   AppCompat forwards the call to the system `LocaleManager` through an active Activity delegate,
+   and none exists that early. No exception and no log — the app just renders in the device
+   language. Only reproducible on a device that is not already Hebrew.
+2. **Firestore rules cannot bound *how much* a counter changes**, only which fields change.
+   Enforcing that needs Cloud Functions, which require the paid Blaze plan.
+3. **`values-en/strings.xml` is never loaded at runtime** — the app is locked to Hebrew. It exists
+   to show that no text is hardcoded and that the app is translation-ready.
+4. **The Android Studio template did not compile** (Phase 1): `core-ktx` 1.19.0 requires
+   `compileSdk 37`. Resolved by pinning `core-ktx` and `glide` rather than chasing a new SDK.
+5. **A brand colour that reads as accessible was not** (Phase 3): `mint_on_light` measures 3.1:1 as
+   text on the light background. Caught by measuring, not by looking.

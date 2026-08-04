@@ -154,6 +154,10 @@
     <string name="error_email_in_use">That email is already registered</string>
     <string name="error_required_field">Required field</string>
     <string name="error_image_upload">Image upload failed. Try again.</string>
+    <string name="error_name_length">Name must be at least 2 characters</string>
+    <string name="error_too_many_attempts">Too many attempts. Try again in a few minutes.</string>
+    <string name="error_user_disabled">This account has been disabled</string>
+    <string name="error_registration_rolled_back">Registration did not complete. Try again.</string>
     <string name="error_title_length">Workout name must be 3 to 60 characters</string>
     <string name="error_description_length">Description can be up to 600 characters</string>
     <string name="error_duration_range">Duration must be between 1 and 600 minutes</string>

@@ -65,6 +65,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    testOptions {
+        unitTests {
+            // Local unit tests run against a stub android.jar whose methods throw by default.
+            // ErrorMapperTest has to construct real Firebase exceptions, and their constructor
+            // calls TextUtils.isEmpty internally - which throws "not mocked" and fails the test
+            // before it reaches the code under test. Returning defaults instead lets those
+            // constructors complete. Nothing in the app relies on this; it affects tests only.
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {

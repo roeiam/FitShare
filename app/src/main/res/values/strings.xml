@@ -151,6 +151,10 @@
     <string name="error_email_in_use">כתובת האימייל כבר רשומה</string>
     <string name="error_required_field">שדה חובה</string>
     <string name="error_image_upload">העלאת התמונה נכשלה. נסה שוב.</string>
+    <string name="error_name_length">השם חייב להכיל לפחות 2 תווים</string>
+    <string name="error_too_many_attempts">יותר מדי ניסיונות. נסה שוב בעוד כמה דקות.</string>
+    <string name="error_user_disabled">החשבון הזה חסום</string>
+    <string name="error_registration_rolled_back">ההרשמה לא הושלמה. נסה שוב.</string>
     <string name="error_title_length">שם האימון חייב להכיל בין 3 ל־60 תווים</string>
     <string name="error_description_length">התיאור יכול להכיל עד 600 תווים</string>
     <string name="error_duration_range">משך האימון חייב להיות בין 1 ל־600 דקות</string>

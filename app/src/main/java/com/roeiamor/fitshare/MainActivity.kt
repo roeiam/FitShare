@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        val isSignedIn = ServiceLocator.firebaseAuth.currentUser != null
+        val isSignedIn = ServiceLocator.authRepository.isSignedIn
         val graph = navController.navInflater.inflate(R.navigation.nav_graph)
         graph.setStartDestination(
             if (isSignedIn) R.id.feedFragment else R.id.loginFragment

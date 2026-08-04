@@ -47,6 +47,18 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
+    <!--
+        Text buttons and links. Defined once so no layout ever names a colour.
+
+        The text colour comes from @color/link_text, which has a values-night variant - the resource
+        qualifier does the theming, so no custom theme attribute is needed. Material3's default text
+        colour here would be colorPrimary, which fails the contrast rule in the light theme.
+    -->
+    <style name="Widget.FitShare.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/link_text</item>
+        <item name="android:minHeight">@dimen/touch_target_min</item>
+    </style>
+
     <!-- Shape appearances, so every card / button / image rounds identically -->
     <style name="ShapeAppearance.FitShare.Card" parent="ShapeAppearance.Material3.Corner.Medium">
         <item name="cornerFamily">rounded</item>

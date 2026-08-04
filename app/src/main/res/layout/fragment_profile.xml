@@ -48,13 +48,25 @@
     -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/editProfile"
-        style="@style/Widget.Material3.Button.TextButton"
+        style="@style/Widget.FitShare.Button.Text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/screen_padding_horizontal"
+        android:layout_marginEnd="@dimen/screen_padding_horizontal"
+        android:minHeight="@dimen/touch_target_min"
+        android:text="@string/profile_edit" />
+
+    <!-- Also own-profile only. Confirms before signing out; the action empties the back stack. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/logout"
+        style="@style/Widget.FitShare.Button.Text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/screen_padding_horizontal"
         android:layout_marginEnd="@dimen/screen_padding_horizontal"
         android:layout_marginBottom="@dimen/space_sm"
         android:minHeight="@dimen/touch_target_min"
-        android:text="@string/profile_edit" />
+        android:text="@string/profile_logout"
+        android:textColor="?attr/colorError" />
 
 </LinearLayout>

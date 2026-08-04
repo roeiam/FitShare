@@ -30,4 +30,14 @@
     <color name="outline_light">#FFD9E0EA</color>
     <color name="danger_on_light">#FFD32F3F</color>
 
+    <!--
+        Text-button / link colour, light theme. 5.0:1 on @color/cloud.
+
+        NOT mint_on_light: as a *fill* behind ink text that measures 5.4:1 and is fine, but as
+        text on the light background it is only 3.1:1 - below the 4.5:1 body-text floor in
+        SPEC section 7. Measured on a device in Phase 3. values-night overrides this with mint,
+        which is 11.3:1 on ink.
+    -->
+    <color name="link_text">#FF0B7A4A</color>
+
 </resources>

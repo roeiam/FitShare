@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Dark-theme colour overrides. Only colours whose accessible value differs between themes belong
+    here; the brand palette itself is defined once in values/colors.xml.
+-->
+<resources>
+
+    <!--
+        Text-button / link colour, dark theme: the full-strength mint, 11.3:1 on @color/ink.
+        The light theme needs a darker green to clear 4.5:1 - see values/colors.xml.
+    -->
+    <color name="link_text">#FF5FE3A1</color>
+
+</resources>

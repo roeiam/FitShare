@@ -3,31 +3,57 @@ package com.roeiamor.fitshare.di
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.roeiamor.fitshare.data.remote.AuthDataSource
+import com.roeiamor.fitshare.data.remote.UserDataSource
+import com.roeiamor.fitshare.data.repository.AuthRepository
+import com.roeiamor.fitshare.data.repository.AuthRepositoryImpl
 
 /**
  * The project's dependency container, written by hand instead of using Hilt or Koin.
  *
- * Everything the app needs is created here, in one place, in an order you can read top to
- * bottom. [init] is called once from [com.roeiamor.fitshare.FitShareApp.onCreate]; from then
- * on ViewModels receive their dependencies through
- * [com.roeiamor.fitshare.di.ViewModelFactory].
+ * Everything the app needs is created here, in one place, in an order you can read top to bottom:
+ * Firebase singletons, then data sources over them, then repositories over those, then the factory
+ * that hands repositories to ViewModels. [init] is called once from
+ * [com.roeiamor.fitshare.FitShareApp.onCreate].
  *
- * Data sources and repositories are added phase by phase - Phase 3 brings auth, Phase 4 the
- * feed, and so on. Only the shared Firebase singletons exist today.
+ * Everything is `by lazy`, so nothing is built until something asks for it and each dependency
+ * exists exactly once for the life of the process.
  */
 object ServiceLocator {
 
     /**
-     * Application context, kept so later phases can reach SharedPreferences, the
-     * ContentResolver and the cache directory without leaking an Activity.
+     * Application context, kept so later phases can reach SharedPreferences, the ContentResolver
+     * and the cache directory without leaking an Activity.
      */
     private lateinit var applicationContext: Context
 
+    // ---- Firebase --------------------------------------------------------------------------
+
     /** The Firebase Authentication entry point, shared by every auth data source. */
-    val firebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
+    private val firebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
 
     /** The Cloud Firestore entry point, shared by every Firestore data source. */
-    val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+
+    // ---- Data sources ----------------------------------------------------------------------
+
+    private val authDataSource: AuthDataSource by lazy { AuthDataSource(firebaseAuth) }
+
+    private val userDataSource: UserDataSource by lazy { UserDataSource(firestore) }
+
+    // ---- Repositories ----------------------------------------------------------------------
+
+    /** Accounts and sessions. Exposed as the interface so callers cannot reach Firebase through it. */
+    val authRepository: AuthRepository by lazy {
+        AuthRepositoryImpl(authDataSource, userDataSource)
+    }
+
+    // ---- ViewModels ------------------------------------------------------------------------
+
+    /** The single factory every Fragment uses to obtain its ViewModel. */
+    val viewModelFactory: ViewModelFactory by lazy { ViewModelFactory(authRepository) }
+
+    // ---- Lifecycle -------------------------------------------------------------------------
 
     /**
      * Stores the application context. Must be called exactly once, from the Application class,
