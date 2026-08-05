@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.favorites
+﻿package com.roeiamor.fitshare.ui.favorites
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
@@ -32,7 +32,7 @@ sealed interface FavoritesUiState {
     data object Empty : FavoritesUiState
 
     /** The read failed. [messageRes] is already mapped to Hebrew by ErrorMapper. */
-    data class Error(@StringRes val messageRes: Int) : FavoritesUiState
+    data class Error(@param:StringRes val messageRes: Int) : FavoritesUiState
 }
 
 /**

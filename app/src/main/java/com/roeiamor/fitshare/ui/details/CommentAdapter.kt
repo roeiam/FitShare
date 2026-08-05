@@ -6,11 +6,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Comment
 import com.roeiamor.fitshare.databinding.ItemCommentBinding
-import com.roeiamor.fitshare.ui.common.relativeTimeText
-import com.roeiamor.fitshare.util.TimeFormatter
+import com.roeiamor.fitshare.ui.common.workoutTimeText
 import com.roeiamor.fitshare.util.loadAvatar
 
 /**
@@ -55,12 +53,10 @@ class CommentAdapter(
 
         /** Fills the row. Every property is set unconditionally, because views are recycled. */
         fun bind(comment: Comment) {
-            val context = binding.root.context
-
             binding.commentAuthor.text = comment.authorName
             binding.commentAvatar.loadAvatar(comment.authorPhotoUrl)
             binding.commentText.text = comment.text
-            binding.commentTime.text = formatCreatedAt(comment)
+            binding.commentTime.text = binding.root.context.workoutTimeText(comment.createdAt)
 
             // The name and the avatar open that user's profile. The whole row is not clickable,
             // because the row's gesture is the long press that deletes it - a tap anywhere opening a
@@ -80,15 +76,6 @@ class CommentAdapter(
                     null
                 }
             )
-        }
-
-        /** `createdAt` is null between a local write and the server acknowledging it. */
-        private fun formatCreatedAt(comment: Comment): String {
-            val context = binding.root.context
-            val millis = comment.createdAt?.toDate()?.time
-                ?: return context.getString(R.string.time_now)
-
-            return context.relativeTimeText(TimeFormatter.describe(millis, System.currentTimeMillis()))
         }
     }
 

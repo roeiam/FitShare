@@ -25,6 +25,12 @@
     <!-- Component sizes -->
     <dimen name="avatar_size_small">40dp</dimen>
     <dimen name="avatar_size_large">96dp</dimen>
+    <!--
+        The brand mark above the auth forms. The source is the launcher icon's own artwork, whose
+        usable square is 259px, so anything above 64dp is drawn from an upscale on an xxxhdpi
+        screen (96dp needs 384px there) and softens slightly. Below xxxhdpi it still downscales.
+    -->
+    <dimen name="logo_size">96dp</dimen>
     <dimen name="touch_target_min">48dp</dimen>
     <dimen name="icon_size">24dp</dimen>
     <dimen name="state_icon_size">72dp</dimen>

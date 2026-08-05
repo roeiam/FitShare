@@ -4,11 +4,19 @@
     Themes map them to Material3 colour roles - layouts reference ?attr/... or a semantic
     colour, never one of these directly unless it is genuinely a fixed brand accent.
 -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Brand palette, from the approved deck (SPEC section 7) -->
     <color name="mint">#FF5FE3A1</color>
-    <color name="mint_pressed">#FF3FC985</color>
+
+    <!--
+        Kept because SPEC section 7 defines the palette, but nothing references it: Material3 draws
+        pressed and hovered states as a translucent state layer over the primary colour rather than
+        by swapping in a second colour, so a hand-picked "pressed mint" never found a consumer.
+        Deleting it would put the code and the specification out of step over a decision that was
+        made by the component library, not by us.
+    -->
+    <color name="mint_pressed" tools:ignore="UnusedResources">#FF3FC985</color>
     <color name="mint_on_light">#FF12A063</color>
     <color name="ink">#FF0E1726</color>
     <color name="navy">#FF17233A</color>
@@ -50,5 +58,13 @@
         theme on the device, not by reading the code.
     -->
     <color name="placeholder_fill">#FFE3E9F2</color>
+
+    <!--
+        The silhouette drawn on an empty avatar. An alias rather than a new hex value, so the two
+        themes stay tied to the palette: text_on_light_muted measures 4.4:1 on placeholder_fill
+        here, and the night override uses text_muted, which measures 5.3:1 on the dark fill. Both
+        clear the 3:1 a non-text graphic needs, with room to spare.
+    -->
+    <color name="placeholder_icon">@color/text_on_light_muted</color>
 
 </resources>

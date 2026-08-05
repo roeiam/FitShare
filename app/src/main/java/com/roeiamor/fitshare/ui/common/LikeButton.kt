@@ -104,7 +104,7 @@ class LikeButton @JvmOverloads constructor(
 
         if (!animate) {
             binding.likeCount.alpha = 1f
-            binding.likeCount.text = count.toString()
+            binding.likeCount.text = count.asCountLabel()
             return
         }
 
@@ -113,7 +113,7 @@ class LikeButton @JvmOverloads constructor(
             .alpha(0f)
             .setDuration(COUNT_FADE_MS)
             .withEndAction {
-                binding.likeCount.text = count.toString()
+                binding.likeCount.text = count.asCountLabel()
                 binding.likeCount.animate().alpha(1f).setDuration(COUNT_FADE_MS).start()
             }
             .start()

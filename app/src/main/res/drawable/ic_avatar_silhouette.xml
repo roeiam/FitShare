@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The head-and-shoulders mark drawn inside an empty avatar, by placeholder_avatar.xml.
+
+    The group scales the figure to about 62% of the viewport around its centre, so the margin
+    between the silhouette and the edge of the circle is part of the artwork rather than an inset
+    applied by whoever draws it. That matters because this one drawable is used at three very
+    different sizes - 96dp on the profile, 40dp on a feed card, 32dp on a comment - and a fixed
+    inset that looked right on the largest would swallow the smallest. A proportion holds at all
+    three.
+
+    Its colour comes from @color/placeholder_icon, which has a values-night override, rather than
+    from a theme attribute: this drawable is handed to Glide as a placeholder and can be inflated
+    against a context whose theme is not the one on screen. A named colour with a night variant is
+    resolved by the resource system either way, and the contrast was calculated for both.
+
+    Symmetrical, so nothing to mirror in RTL.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/placeholder_icon">
+
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.62"
+        android:scaleY="0.62">
+        <path
+            android:fillColor="@android:color/white"
+            android:pathData="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z" />
+    </group>
+
+</vector>

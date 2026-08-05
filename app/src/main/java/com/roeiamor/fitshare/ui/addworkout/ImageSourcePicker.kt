@@ -1,10 +1,9 @@
-package com.roeiamor.fitshare.ui.addworkout
+﻿package com.roeiamor.fitshare.ui.addworkout
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.roeiamor.fitshare.databinding.BottomSheetImageSourceBinding
@@ -42,8 +41,15 @@ class ImageSourcePicker : BottomSheetDialogFragment() {
         _binding = null
     }
 
+    /**
+     * Hands the choice back to the host Fragment and closes.
+     *
+     * A plain [Bundle] rather than `bundleOf`: that helper takes `Pair<String, Any?>`, so a typo in
+     * the value's type is only found when something reads it back and crashes. `putString` will not
+     * compile with the wrong type.
+     */
     private fun reportChoice(source: String) {
-        setFragmentResult(REQUEST_KEY, bundleOf(RESULT_SOURCE to source))
+        setFragmentResult(REQUEST_KEY, Bundle().apply { putString(RESULT_SOURCE, source) })
         dismiss()
     }
 

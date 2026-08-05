@@ -1,7 +1,9 @@
 package com.roeiamor.fitshare.ui.common
 
 import android.view.View
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.databinding.LayoutStateEmptyBinding
 import com.roeiamor.fitshare.databinding.LayoutStateErrorBinding
 import com.roeiamor.fitshare.databinding.LayoutStateLoadingBinding
@@ -36,15 +38,19 @@ class StateRenderer(
      *
      * @param titleRes the headline, for example "no workouts here yet".
      * @param bodyRes the sentence under it, explaining what to do next.
+     * @param iconRes the illustration. Defaults to the plus, which suits every screen that is empty
+     *   because nothing has been added yet; a screen saying something is *gone* passes its own.
      * @param actionRes optional button label. Pass null when the screen has no useful action.
      * @param onAction invoked when that button is tapped.
      */
     fun showEmpty(
         @StringRes titleRes: Int,
         @StringRes bodyRes: Int,
+        @DrawableRes iconRes: Int = R.drawable.ic_empty_state,
         @StringRes actionRes: Int? = null,
         onAction: (() -> Unit)? = null
     ) {
+        empty.emptyIcon.setImageResource(iconRes)
         empty.emptyTitle.setText(titleRes)
         empty.emptyBody.setText(bodyRes)
         if (actionRes != null && onAction != null) {

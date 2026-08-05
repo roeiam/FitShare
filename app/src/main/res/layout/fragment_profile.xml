@@ -5,6 +5,8 @@
 
     The four states from SPEC section 5 live here: the content container plus the three shared
     state layouts, included rather than copied. ui/common/StateRenderer decides which one shows.
+    The FrameLayout is the root, because the four states are stacked rather than sequenced and
+    nothing needs to sit above or below them.
 
     The header is fixed and only the grid scrolls. There is deliberately no ScrollView: nesting a
     RecyclerView inside one defeats view recycling, because the RecyclerView is then measured
@@ -12,19 +14,13 @@
 
     RTL: Start/End throughout; the three statistics read right to left on their own.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <LinearLayout
+    <LinearLayout
             android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -124,30 +120,43 @@
                     android:paddingEnd="@dimen/space_md"
                     android:text="@string/profile_theme" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/logout"
-                    style="@style/Widget.FitShare.Button.Text"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="@dimen/touch_target_min"
-                    android:text="@string/profile_logout"
-                    android:textColor="?attr/colorError" />
-
             </LinearLayout>
 
             <!-- ===== The workout grid ===== -->
+
+            <!--
+                A heading, so the grid reads as a section of the profile rather than a set of
+                thumbnails floating under the statistics. Same style as the "תגובות" heading on the
+                details screen. Its text depends on whose profile this is - "my workouts" on
+                somebody else's would be wrong - and ProfileFragment sets it.
+            -->
+            <TextView
+                android:id="@+id/workoutsHeading"
+                style="@style/TextAppearance.FitShare.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg"
+                android:paddingStart="@dimen/screen_padding_horizontal"
+                android:paddingEnd="@dimen/screen_padding_horizontal" />
 
             <!--
                 Shown instead of the grid when this user has published nothing. Not the screen's
                 empty state: the profile itself loaded fine and still has a name, a bio and an
                 avatar worth showing.
             -->
+            <!--
+                It carries the weight when it is showing, exactly as the grid does when it is not.
+                Without that, a profile with no workouts would collapse this to one line and logout
+                would ride up under it instead of staying at the bottom of the screen.
+            -->
             <TextView
                 android:id="@+id/noWorkouts"
                 style="@style/TextAppearance.FitShare.Body"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_marginTop="@dimen/space_xl"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
                 android:paddingStart="@dimen/screen_padding_horizontal"
                 android:paddingEnd="@dimen/screen_padding_horizontal"
                 android:textAlignment="center"
@@ -166,6 +175,29 @@
                 tools:itemCount="6"
                 tools:listitem="@layout/item_workout_grid" />
 
+            <!--
+                Logout lives at the very bottom, below the grid, and outside the group above.
+
+                It used to sit with edit and the theme switch, which put "sign out" between the user
+                and their own workouts - the one destructive control on the screen, in the middle of
+                it. At the bottom it is where a destructive action is expected, and reaching it is a
+                deliberate scroll to the end rather than something the thumb passes over.
+
+                It has its own visibility because it is no longer inside ownerActions, and it must
+                still be absent from somebody else's profile.
+            -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/logout"
+                style="@style/Widget.FitShare.Button.Text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/screen_padding_horizontal"
+                android:layout_marginEnd="@dimen/screen_padding_horizontal"
+                android:layout_marginBottom="@dimen/space_sm"
+                android:minHeight="@dimen/touch_target_min"
+                android:text="@string/profile_logout"
+                android:textColor="?attr/colorError" />
+
         </LinearLayout>
 
         <include
@@ -180,6 +212,4 @@
             android:id="@+id/stateError"
             layout="@layout/layout_state_error" />
 
-    </FrameLayout>
-
-</LinearLayout>
+</FrameLayout>

@@ -40,7 +40,8 @@ class FavoritesFragment : BaseFragment<FragmentFavoritesBinding>() {
         super.onViewCreated(view, savedInstanceState)
 
         stateRenderer = StateRenderer(
-            content = binding.content,
+            // The list is the content state: it needs no container of its own.
+            content = binding.favoritesList,
             loading = binding.stateLoading,
             empty = binding.stateEmpty,
             error = binding.stateError

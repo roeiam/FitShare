@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
+import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,7 +37,7 @@ class ImageCompressor(private val context: Context) {
      * Compresses the image at [uri] into a JPEG in the cache directory.
      *
      * Runs on [Dispatchers.IO]: decoding and writing a bitmap is slow and blocking, and doing it on
-     * the main thread is exactly the jank CLAUDE.md forbids.
+     * the main thread is exactly the jank the project's rules forbid.
      *
      * @return the compressed file, or a failure if the image cannot be read or decoded.
      */
@@ -82,7 +83,7 @@ class ImageCompressor(private val context: Context) {
         val target = scaleToMaxEdge(ImageDimensions(source.width, source.height), MAX_EDGE_PIXELS)
         if (target.width == source.width && target.height == source.height) return source
 
-        val scaled = Bitmap.createScaledBitmap(source, target.width, target.height, true)
+        val scaled = source.scale(target.width, target.height)
         if (scaled != source) source.recycle()
         return scaled
     }

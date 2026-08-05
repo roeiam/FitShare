@@ -5,7 +5,7 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Runs a suspending call and turns any failure into `Result.failure` instead of a thrown exception.
  *
- * This is what keeps the CLAUDE.md promise that no Firebase or network call can crash the app: every
+ * This is what keeps the project's promise that no Firebase or network call can crash the app: every
  * data source call goes through here, so a caller always gets a `Result` to handle.
  *
  * It deliberately does **not** use `runCatching`. `runCatching` catches `Throwable`, which includes

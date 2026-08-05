@@ -2,9 +2,12 @@
 <!--
     Bottom navigation, four items (SPEC section 5): פיד · מועדפים · הוספה · פרופיל
 
-    Each item's id matches a destination id in nav_graph.xml. That is what lets
-    NavigationUI.setupWithNavController wire tab taps, the selected highlight and the back stack
-    without a single manual click listener.
+    Each item's id matches a destination id in nav_graph.xml, so MainActivity can treat a tab tap as
+    "navigate to the destination with this id" without a lookup table.
+
+    NavigationUI.setupWithNavController is deliberately NOT used to wire this up - it assumes the
+    tabs are nested graphs, and against this flat graph it leaves the bottom bar dead after any
+    pushed screen. The reasoning is in MainActivity.setUpBottomNavigation and NAV_UI_FIXES.md.
 
     RTL: this order is written first-to-last, and Android lays the items out right-to-left under a
     Hebrew locale, so "פיד" ends up on the right. Do not reverse the order here to "fix" it -
@@ -17,9 +20,15 @@
         android:icon="@drawable/ic_feed"
         android:title="@string/nav_feed" />
 
+    <!--
+        The bookmark, not a heart. The save-to-favourites control on the details screen is a
+        bookmark, so the tab that holds what was saved has to be the same symbol - otherwise the
+        heart means "like" on a card and "favourites" in the bar, which is the confusion the
+        bookmark was introduced to remove. Filled, to match the weight of the other three icons.
+    -->
     <item
         android:id="@+id/favoritesFragment"
-        android:icon="@drawable/ic_favorites"
+        android:icon="@drawable/ic_bookmark_filled"
         android:title="@string/nav_favorites" />
 
     <item

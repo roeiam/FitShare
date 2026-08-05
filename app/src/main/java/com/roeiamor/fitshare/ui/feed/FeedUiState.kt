@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.feed
+﻿package com.roeiamor.fitshare.ui.feed
 
 import androidx.annotation.StringRes
 import com.roeiamor.fitshare.data.model.Workout
@@ -30,5 +30,5 @@ sealed interface FeedUiState {
     data class Empty(val isFiltered: Boolean) : FeedUiState
 
     /** The read failed. [messageRes] is already mapped to Hebrew by ErrorMapper. */
-    data class Error(@StringRes val messageRes: Int) : FeedUiState
+    data class Error(@param:StringRes val messageRes: Int) : FeedUiState
 }

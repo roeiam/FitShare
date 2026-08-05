@@ -23,6 +23,18 @@
 
         <!-- Surfaces -->
         <item name="android:colorBackground">@color/cloud</item>
+
+        <!--
+            The window's own background, behind everything the Activity draws.
+
+            Set explicitly, and this is not cosmetic. Switching the theme calls
+            setDefaultNightMode, which recreates the Activity, and for the moment between the old
+            window going away and the new one drawing, the only thing on screen is this. Left
+            unset it inherits the platform default, which is black - so flipping the theme flashed
+            a full black screen. Pointing it at the app's own background makes that frame the
+            colour the app is about to be anyway, in whichever theme is being switched to.
+        -->
+        <item name="android:windowBackground">?android:attr/colorBackground</item>
         <item name="colorOnBackground">@color/text_on_light_high</item>
         <item name="colorSurface">@color/surface_light</item>
         <item name="colorOnSurface">@color/text_on_light_high</item>

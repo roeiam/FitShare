@@ -12,7 +12,7 @@ import java.net.UnknownHostException
 /**
  * Unit tests for [ErrorMapper].
  *
- * The point of these is the promise in CLAUDE.md: every failure the user can cause has a specific
+ * The point of these is the project's promise: every failure the user can cause has a specific
  * Hebrew message, and `error_generic` is reserved for causes we genuinely do not recognise.
  */
 class ErrorMapperTest {

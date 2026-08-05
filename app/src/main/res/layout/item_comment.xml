@@ -4,6 +4,11 @@
 
     RTL: every constraint uses Start/End, so the avatar sits on the right under Hebrew and the text
     flows away from it without any mirroring work.
+
+    The background is the touch ripple, not a colour: long-pressing your own comment offers to delete
+    it, and a row that gives no feedback under the finger reads as unresponsive. Lint's Overdraw
+    check assumes a root background is opaque and hides the theme's; a ripple is transparent until
+    touched, so there is nothing to hide - hence the suppression below.
 -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -12,6 +17,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/selectableItemBackground"
+    tools:ignore="Overdraw"
     android:paddingTop="@dimen/space_sm"
     android:paddingBottom="@dimen/space_sm">
 

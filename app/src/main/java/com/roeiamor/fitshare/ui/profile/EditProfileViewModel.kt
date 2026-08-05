@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.profile
+﻿package com.roeiamor.fitshare.ui.profile
 
 import android.net.Uri
 import androidx.annotation.StringRes
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 data class EditProfileUiState(
     val avatarUri: Uri? = null,
     val existingPhotoUrl: String? = null,
-    @StringRes val nameError: Int? = null,
+    @param:StringRes val nameError: Int? = null,
     val isSaveEnabled: Boolean = false,
     val isSaving: Boolean = false
 )

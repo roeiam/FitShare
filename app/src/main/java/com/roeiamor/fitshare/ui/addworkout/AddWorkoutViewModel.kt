@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.addworkout
+﻿package com.roeiamor.fitshare.ui.addworkout
 
 import android.net.Uri
 import androidx.annotation.StringRes
@@ -32,9 +32,9 @@ data class AddWorkoutUiState(
     val imageUri: Uri? = null,
     /** The photo the workout already has, when editing. Shown until a new one is picked. */
     val existingImageUrl: String? = null,
-    @StringRes val titleError: Int? = null,
-    @StringRes val descriptionError: Int? = null,
-    @StringRes val durationError: Int? = null,
+    @param:StringRes val titleError: Int? = null,
+    @param:StringRes val descriptionError: Int? = null,
+    @param:StringRes val durationError: Int? = null,
     val selectedCategory: WorkoutCategory = WorkoutCategory.STRENGTH,
     val selectedDifficulty: Difficulty = Difficulty.MEDIUM,
     val isSubmitEnabled: Boolean = false,

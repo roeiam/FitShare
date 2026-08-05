@@ -15,14 +15,15 @@ import androidx.core.view.isGone
 import androidx.core.view.updatePadding
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.navOptions
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.ui.setupWithNavController
 import com.roeiamor.fitshare.databinding.ActivityMainBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.util.hideKeyboard
+import com.roeiamor.fitshare.util.offlineBannerVisibility
 import com.roeiamor.fitshare.util.requestVisibleAboveKeyboard
 import kotlinx.coroutines.launch
 
@@ -74,14 +75,31 @@ class MainActivity : AppCompatActivity() {
      *
      * `repeatOnLifecycle(STARTED)` is what stops the `NetworkCallback` from staying registered while
      * the app is in the background: collection is cancelled on stop and restarted on start, and
-     * cancelling the flow unregisters the callback through its `awaitClose`.
+     * cancelling the flow unregisters the callback through its `awaitClose`. It also means this runs
+     * again on every return to the app, which is why the first emission has to be right.
+     *
+     * **Showing is delayed, hiding is not.** Android routinely reports a network as available a
+     * fraction of a second before it reports it as validated, and hands over between networks by
+     * losing one before gaining the next. Measured on a device: two such windows during a single
+     * airplane-mode toggle, 0.69s and 1.05s, neither of which the user would call "no internet".
+     * Reacting instantly to those is what made the banner flash on launch and on every resume.
+     * [OFFLINE_BANNER_DELAY_MS] outlasts them; a real disconnection still surfaces well inside the
+     * two seconds a user would wait before wondering.
+     *
+     * `collectLatest` is what makes that a delay rather than a queue: a newer status cancels the
+     * block still waiting on the old one, so a blip is dropped instead of being shown late.
+     *
+     * This delay is deliberately **presentation only**. [com.roeiamor.fitshare.util.NetworkGuard]
+     * still asks [com.roeiamor.fitshare.util.NetworkMonitor.isOnline] directly and still refuses a
+     * call the instant there is no validated connection, so an offline failure message appears with
+     * no delay at all. The banner can afford to wait and see; a write cannot.
      */
     private fun observeConnectivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                ServiceLocator.networkMonitor.observe().collect { isOnline ->
-                    binding.offlineBanner.isVisible = !isOnline
-                }
+                ServiceLocator.networkMonitor.observe()
+                    .offlineBannerVisibility(OFFLINE_BANNER_DELAY_MS)
+                    .collect { showBanner -> binding.offlineBanner.isVisible = showBanner }
             }
         }
     }
@@ -101,9 +119,18 @@ class MainActivity : AppCompatActivity() {
      *
      * From API 33 the system remembers the choice, so this only causes a recreate on the very first
      * launch after install; every launch after that already starts in Hebrew.
+     *
+     * **The guard is not an optimisation.** Below API 33 AppCompat stores the locale itself and
+     * applies it by recreating the Activity, and it does that on every call - including the call
+     * this very method makes from `onCreate` of the Activity that a *theme* change has just
+     * recreated. Unguarded, one theme switch became two relaunches back to back, which is what made
+     * the screen sit black for over two seconds instead of a fraction of one.
      */
     private fun forceHebrewLocale() {
-        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("he"))
+        if (AppCompatDelegate.getApplicationLocales().toLanguageTags() == HEBREW_LANGUAGE_TAG) return
+        AppCompatDelegate.setApplicationLocales(
+            LocaleListCompat.forLanguageTags(HEBREW_LANGUAGE_TAG)
+        )
     }
 
     /**
@@ -205,13 +232,121 @@ class MainActivity : AppCompatActivity() {
         )
         navController.graph = graph
 
-        // Matching ids between menu_bottom_nav.xml and nav_graph.xml let NavigationUI handle tab
-        // taps, the selected highlight and the tab back stack with no click listeners of our own.
-        binding.bottomNav.setupWithNavController(navController)
+        // Each item id in menu_bottom_nav.xml is also a destination id in nav_graph.xml, so a tab
+        // tap is simply "navigate to the destination with this id".
+        setUpBottomNavigation()
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             isAuthDestination = destination.id in authDestinations
             updateBottomNavVisibility()
+            highlightTab(destination.id)
         }
+    }
+
+    /**
+     * Wires the bottom bar to the graph by hand, instead of with
+     * `NavigationUI.setupWithNavController`.
+     *
+     * That helper is written for an app whose tabs are **nested** graphs. It navigates with
+     * `popUpTo(startDestination) { saveState = true }` plus `restoreState = true`, and against this
+     * flat graph - where `workoutDetailsFragment` is a sibling of the tabs rather than a child of
+     * one - that pair breaks the bottom bar in two ways, both reproduced on the device:
+     *
+     *  - **Every tab stopped working after opening a workout.** Tapping פיד while a workout was
+     *    showing popped the workout off (saving it, keyed by the destination popped up *to* - the
+     *    feed, which is the graph's start destination) and then, in the very same call, matched that
+     *    freshly saved key with `restoreState` and pushed the workout straight back. The stack came
+     *    out byte for byte identical, the helper reported the tap unhandled, and the screen never
+     *    changed.
+     *  - **A tab remembered the workout you left it on.** Leaving מועדפים with a workout open saved
+     *    `favoritesFragment > workoutDetailsFragment`, and coming back restored both, so the tab
+     *    opened on the workout instead of the list.
+     *
+     * So the fix is to drop `saveState`/`restoreState` entirely: a tab tap goes to that tab's root
+     * and forgets what was on top of it. Nesting each tab in its own graph would have made the
+     * helper's assumption true, but it would also have kept the second behaviour - which is the one
+     * that was reported as a bug - and it would have needed the details and profile destinations
+     * duplicated into three sub-graphs.
+     */
+    private fun setUpBottomNavigation() {
+        binding.bottomNav.setOnItemSelectedListener { item -> openTab(item.itemId) }
+
+        // Fires instead of the listener above when the tapped tab is already the highlighted one -
+        // which is exactly the case while a workout opened from that tab is showing. Same handler,
+        // so a tab always takes the user to its root rather than doing nothing.
+        binding.bottomNav.setOnItemReselectedListener { item -> openTab(item.itemId) }
+    }
+
+    /**
+     * Takes the bottom bar to a tab's root screen, from whatever depth the user is at.
+     *
+     * `popUpTo` the graph's start destination clears everything pushed on top - a workout, the
+     * editor, someone else's profile - so a tab tap always lands on that tab's own screen. Back from
+     * any tab then returns to the feed and exits from there, which is the behaviour Phase 2 settled
+     * on and this keeps unchanged.
+     *
+     * Deliberately no `saveState` and no `restoreState`: that is what tells Navigation to forget the
+     * screen the user was on inside a tab. Restoring it would drop them back onto a workout they had
+     * already left, which is not what tapping a tab means.
+     *
+     * Always returns true, so the tapped tab takes the highlight.
+     */
+    private fun openTab(tabId: Int): Boolean {
+        if (isAtTabRoot(tabId)) return true
+
+        navController.navigate(
+            tabId,
+            null,
+            navOptions {
+                launchSingleTop = true
+                popUpTo(navController.graph.startDestinationId) { inclusive = false }
+            }
+        )
+        return true
+    }
+
+    /**
+     * True when the screen already showing **is** that tab's root, so the tap has nothing to do.
+     *
+     * The destination id on its own is not enough to decide. Two tabs double as something else
+     * behind a nullable argument - `profileFragment` also shows another user's profile,
+     * `addWorkoutFragment` also edits an existing workout - and from those the tab must still
+     * navigate. Every argument on a tab destination is a nullable String defaulting to null, so a
+     * tab root is that destination with all of its arguments still null.
+     */
+    private fun isAtTabRoot(tabId: Int): Boolean {
+        val entry = navController.currentBackStackEntry ?: return false
+        if (entry.destination.id != tabId) return false
+        val arguments = entry.arguments ?: return true
+        return entry.destination.arguments.keys.all { arguments.getString(it) == null }
+    }
+
+    /**
+     * Keeps the highlighted tab in step with navigation that did not come from a tab tap - signing
+     * in, the feed's add button, or a card opening a workout.
+     *
+     * Anything that is not a tab root leaves the highlight alone, so a workout opened from the feed
+     * still shows פיד as the current tab, and another user's profile does not light up פרופיל.
+     * Setting `isChecked` rather than `selectedItemId` moves the highlight without pretending the
+     * user tapped, so this cannot loop back into [openTab].
+     */
+    private fun highlightTab(destinationId: Int) {
+        if (!isAtTabRoot(destinationId)) return
+        binding.bottomNav.menu.findItem(destinationId)?.isChecked = true
+    }
+
+    private companion object {
+        /** The only language the app ever runs in (SPEC section 9.2). */
+        const val HEBREW_LANGUAGE_TAG = "he"
+
+        /**
+         * How long the connection must stay down before the banner appears.
+         *
+         * 1.5 seconds, chosen from measurement rather than taste: a single airplane-mode toggle on a
+         * device produced two windows in which the app was momentarily "not validated" while the
+         * connection was in fact fine - 0.69s and 1.05s. This outlasts both with margin, and still
+         * surfaces a genuine disconnection inside two seconds.
+         */
+        const val OFFLINE_BANNER_DELAY_MS = 1_500L
     }
 }

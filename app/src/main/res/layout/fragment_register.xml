@@ -21,6 +21,17 @@
         android:paddingEnd="@dimen/screen_padding_horizontal"
         android:paddingBottom="@dimen/space_xxl">
 
+        <!-- The same brand mark as the login screen; the reasoning is in fragment_login.xml. -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/logo"
+            android:layout_width="@dimen/logo_size"
+            android:layout_height="@dimen/logo_size"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="@dimen/space_lg"
+            android:contentDescription="@string/cd_logo"
+            android:src="@drawable/logo_fitshare"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.FitShare.Card" />
+
         <TextView
             style="@style/TextAppearance.FitShare.Headline"
             android:layout_width="match_parent"

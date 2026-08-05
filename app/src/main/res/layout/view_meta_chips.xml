@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A workout's three facts as chips: category · duration · difficulty (SPEC section 5).
+
+    Written once and <include>d by both the feed card (item_workout.xml) and the details screen
+    (fragment_workout_details.xml). The two used to carry their own identical copy of this block,
+    which meant a change to the chip style had to be made twice and could silently drift.
+
+    The ids stay inside this file, so ui/common/MetaChips.kt can fill all three from one Workout
+    without either caller knowing how the row is built.
+
+    singleLine: three chips always fit on a phone in Hebrew, and letting them wrap would change the
+    card's height from row to row and make the feed jump while scrolling.
+-->
+<com.google.android.material.chip.ChipGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:chipSpacingHorizontal="@dimen/space_xs"
+    app:singleLine="true">
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/categoryChip"
+        style="@style/Widget.FitShare.Chip.Meta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="כוח" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/durationChip"
+        style="@style/Widget.FitShare.Chip.Meta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="45 דקות" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/difficultyChip"
+        style="@style/Widget.FitShare.Chip.Meta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="בינוני" />
+
+</com.google.android.material.chip.ChipGroup>

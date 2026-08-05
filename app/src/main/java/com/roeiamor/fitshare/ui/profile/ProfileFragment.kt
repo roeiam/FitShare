@@ -18,6 +18,7 @@ import com.roeiamor.fitshare.databinding.FragmentProfileBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
 import com.roeiamor.fitshare.ui.common.StateRenderer
+import com.roeiamor.fitshare.ui.common.asCountLabel
 import com.roeiamor.fitshare.util.loadAvatar
 
 /**
@@ -73,9 +74,15 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>() {
         binding.statFavorites.statLabel.setText(R.string.profile_favorites)
     }
 
-    /** Edit, the theme toggle and logout exist only on my own profile, never on someone else's. */
+    /**
+     * Edit, the theme toggle and logout exist only on my own profile, never on someone else's.
+     *
+     * Two visibility flags rather than one, because logout no longer sits with the other two: it is
+     * at the bottom of the screen, below the grid, where a destructive action belongs.
+     */
     private fun bindOwnerActions() {
         binding.ownerActions.isVisible = viewModel.isOwnProfile
+        binding.logout.isVisible = viewModel.isOwnProfile
 
         binding.editProfile.setOnClickListener {
             findNavController().navigate(ProfileFragmentDirections.actionProfileToEditProfile())
@@ -90,7 +97,7 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>() {
      * The preference is read and written straight from the ServiceLocator rather than through the
      * ViewModel. It is a **view-layer preference, not business logic**: nothing outside the UI cares
      * about it, and routing it through a ViewModel would mean handing that ViewModel an object that
-     * holds a `Context`, which the layer rules in CLAUDE.md forbid.
+     * holds a `Context`, which the project's layer rules forbid - see README section 3.
      *
      * `setOnCheckedChangeListener` is attached *after* the initial value is set, so restoring the
      * switch to its stored position does not itself count as a change and re-apply the theme.
@@ -163,11 +170,19 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>() {
         binding.bio.text = state.user.bio
         binding.bio.isGone = state.user.bio.isBlank()
 
-        binding.statWorkouts.statValue.text = state.user.workoutsCount.toString()
-        binding.statLikes.statValue.text = state.likesReceived.toString()
+        binding.statWorkouts.statValue.text = state.user.workoutsCount.asCountLabel()
+        binding.statLikes.statValue.text = state.likesReceived.asCountLabel()
         // Null means "not knowable" - another user's favourites are private (SPEC section 10).
         binding.statFavorites.statValue.text =
-            state.favoritesCount?.toString() ?: getString(R.string.profile_stat_unavailable)
+            state.favoritesCount?.asCountLabel() ?: getString(R.string.profile_stat_unavailable)
+
+        binding.workoutsHeading.setText(
+            if (state.isOwnProfile) {
+                R.string.profile_workouts_mine
+            } else {
+                R.string.profile_workouts_other
+            }
+        )
 
         val hasWorkouts = state.workouts.isNotEmpty()
         binding.workoutGrid.isVisible = hasWorkouts

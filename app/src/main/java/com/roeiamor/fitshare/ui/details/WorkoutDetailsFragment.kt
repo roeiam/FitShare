@@ -14,16 +14,12 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Comment
-import com.roeiamor.fitshare.data.model.Difficulty
-import com.roeiamor.fitshare.data.model.Workout
-import com.roeiamor.fitshare.data.model.WorkoutCategory
 import com.roeiamor.fitshare.databinding.FragmentWorkoutDetailsBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
 import com.roeiamor.fitshare.ui.common.StateRenderer
-import com.roeiamor.fitshare.ui.common.labelRes
-import com.roeiamor.fitshare.ui.common.relativeTimeText
-import com.roeiamor.fitshare.util.TimeFormatter
+import com.roeiamor.fitshare.ui.common.bind
+import com.roeiamor.fitshare.ui.common.workoutTimeText
 import com.roeiamor.fitshare.util.loadAvatar
 import com.roeiamor.fitshare.util.loadWorkoutImage
 import com.roeiamor.fitshare.util.showSnackbar
@@ -78,7 +74,7 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
         binding.deleteButton.setOnClickListener { confirmDeleteWorkout() }
         binding.editButton.setOnClickListener { openEditor() }
 
-        binding.authorRow.setOnClickListener {
+        binding.authorIdentity.setOnClickListener {
             val authorId = viewModel.currentWorkout()?.authorId ?: return@setOnClickListener
             openProfile(authorId)
         }
@@ -125,11 +121,27 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
 
             // Not an error: somebody deleting their workout while you look at it is normal, and
             // "try again" would be the wrong thing to offer.
-            WorkoutDetailsUiState.Deleted -> stateRenderer.showEmpty(
+            //
+            // The action depends on how the user got here. Arriving from a saved entry, the saved
+            // copy is now the only thing pointing at a workout that no longer exists, and this is
+            // the one screen that can remove it - so that is what the button does. Arriving from
+            // anywhere else there is nothing to clean up, and the button just goes back.
+            is WorkoutDetailsUiState.Deleted -> stateRenderer.showEmpty(
                 titleRes = R.string.details_deleted_title,
                 bodyRes = R.string.details_deleted_body,
-                actionRes = R.string.action_back,
-                onAction = { findNavController().navigateUp() }
+                iconRes = R.drawable.ic_deleted_state,
+                actionRes = if (state.isFavorite) {
+                    R.string.details_deleted_remove
+                } else {
+                    R.string.action_back
+                },
+                onAction = {
+                    if (state.isFavorite) {
+                        viewModel.onRemoveDeletedFavorite()
+                    } else {
+                        findNavController().navigateUp()
+                    }
+                }
             )
 
             is WorkoutDetailsUiState.Error -> stateRenderer.showError(
@@ -146,15 +158,9 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
         binding.workoutTitle.text = workout.title
         binding.authorName.text = workout.authorName
         binding.authorAvatar.loadAvatar(workout.authorPhotoUrl)
-        binding.createdAt.text = formatCreatedAt(workout)
+        binding.createdAt.text = requireContext().workoutTimeText(workout.createdAt)
 
-        binding.categoryChip.setText(WorkoutCategory.fromName(workout.category).labelRes())
-        binding.durationChip.text = resources.getQuantityString(
-            R.plurals.unit_minutes,
-            workout.durationMinutes,
-            workout.durationMinutes
-        )
-        binding.difficultyChip.setText(Difficulty.fromName(workout.difficulty).labelRes())
+        binding.metaChips.bind(workout)
 
         binding.workoutDescription.isVisible = workout.description.isNotBlank()
         binding.workoutDescription.text = workout.description
@@ -171,8 +177,19 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
         renderComments(state)
     }
 
-    /** Mint when saved, muted when not - the same visual language as the like mark. */
+    /**
+     * A bookmark: outlined and muted when the workout is not saved, filled and mint when it is.
+     *
+     * A bookmark rather than a heart, because the heart-and-dumbbell mark next to it is the like
+     * button (SPEC section 7). Liking and saving are different actions, and drawing both as a heart
+     * made them look like the same one. The colour language stays shared with the like mark, so the
+     * two still belong to the same screen.
+     */
     private fun renderFavorite(isFavorite: Boolean) {
+        binding.favoriteButton.setImageResource(
+            if (isFavorite) R.drawable.ic_bookmark_filled else R.drawable.ic_bookmark_border
+        )
+
         val colorRes = if (isFavorite) R.color.link_text else R.color.text_muted
         binding.favoriteButton.setColorFilter(ContextCompat.getColor(requireContext(), colorRes))
         binding.favoriteButton.contentDescription = getString(
@@ -206,13 +223,6 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
     private fun openProfile(userId: String) {
         findNavController().navigate(
             WorkoutDetailsFragmentDirections.actionWorkoutDetailsToProfile(userId = userId)
-        )
-    }
-
-    private fun formatCreatedAt(workout: Workout): String {
-        val millis = workout.createdAt?.toDate()?.time ?: return getString(R.string.time_now)
-        return requireContext().relativeTimeText(
-            TimeFormatter.describe(millis, System.currentTimeMillis())
         )
     }
 

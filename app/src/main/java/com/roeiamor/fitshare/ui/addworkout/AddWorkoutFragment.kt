@@ -1,6 +1,7 @@
 package com.roeiamor.fitshare.ui.addworkout
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -18,6 +19,7 @@ import androidx.navigation.fragment.navArgs
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Difficulty
 import com.roeiamor.fitshare.data.model.WorkoutCategory
+import com.roeiamor.fitshare.data.model.WorkoutDraft
 import com.roeiamor.fitshare.databinding.FragmentAddWorkoutBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
@@ -214,12 +216,7 @@ class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
         // ViewModel through the watchers, which is fine - the values are identical - but it must
         // not be re-delivered, or a rotation would overwrite anything typed since.
         viewModel.prefill.observe(viewLifecycleOwner) { event ->
-            val draft = event.getContentIfNotHandled() ?: return@observe
-            binding.titleInput.setText(draft.title)
-            binding.descriptionInput.setText(draft.description)
-            binding.durationInput.setText(draft.durationMinutes.toString())
-            binding.categoryChips.check(CATEGORY_CHIP_BASE_ID + WorkoutCategory.entries.indexOf(draft.category))
-            binding.difficultyChips.check(DIFFICULTY_CHIP_BASE_ID + Difficulty.entries.indexOf(draft.difficulty))
+            event.getContentIfNotHandled()?.let { prefillForm(it) }
         }
 
         viewModel.message.observe(viewLifecycleOwner) { event ->
@@ -230,6 +227,26 @@ class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
             event.getContentIfNotHandled() ?: return@observe
             findNavController().navigate(R.id.feedFragment)
         }
+    }
+
+    /**
+     * Fills the form from an existing workout, when the screen opened as the editor.
+     *
+     * `SetTextI18n` is suppressed for one line and one reason: the duration goes back into the
+     * validator as a number, and a locale-aware format would group it as "1,200" and stop parsing.
+     * That check is about text a user reads; this is a value a user edits.
+     */
+    @SuppressLint("SetTextI18n")
+    private fun prefillForm(draft: WorkoutDraft) {
+        binding.titleInput.setText(draft.title)
+        binding.descriptionInput.setText(draft.description)
+        binding.durationInput.setText(draft.durationMinutes.toString())
+        binding.categoryChips.check(
+            CATEGORY_CHIP_BASE_ID + WorkoutCategory.entries.indexOf(draft.category)
+        )
+        binding.difficultyChips.check(
+            DIFFICULTY_CHIP_BASE_ID + Difficulty.entries.indexOf(draft.difficulty)
+        )
     }
 
     /** Draws one state: the photo, the three inline errors, and the upload progress. */

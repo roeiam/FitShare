@@ -15,4 +15,7 @@
     <!-- Placeholder fill, dark theme: the elevated navy, clearly above @color/ink. -->
     <color name="placeholder_fill">#FF223150</color>
 
+    <!-- Avatar silhouette, dark theme: the muted text colour, 5.3:1 on the fill above. -->
+    <color name="placeholder_icon">@color/text_muted</color>
+
 </resources>

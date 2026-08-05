@@ -31,7 +31,6 @@
     <string name="register_name">Full name</string>
     <string name="register_confirm">Confirm password</string>
     <string name="register_submit">Sign up</string>
-    <string name="register_avatar">Profile photo (optional)</string>
     <string name="register_to_login">Already have an account? Log in</string>
 
     <!-- Forgot password -->
@@ -81,6 +80,7 @@
     <string name="details_comment_delete_confirm">Delete this comment?</string>
     <string name="details_deleted_title">This workout was deleted</string>
     <string name="details_deleted_body">Its owner removed it</string>
+    <string name="details_deleted_remove">Remove from favourites</string>
     <string name="details_share_text">"%1$s by %2$s · %3$s\n\nShared from FitShare"</string>
     <string name="details_edit_title">Edit workout</string>
     <string name="details_edit_save">Save changes</string>
@@ -109,6 +109,9 @@
     <string name="profile_empty_body_other">Their workouts will show up here</string>
     <string name="profile_no_workouts">You have not posted any workouts</string>
     <string name="profile_no_workouts_other">This user has not posted any workouts</string>
+    <!-- Heading above the workout grid. Two versions: the grid is not always mine. -->
+    <string name="profile_workouts_mine">My workouts</string>
+    <string name="profile_workouts_other">Workouts</string>
     <string name="profile_stat_unavailable">—</string>
     <string name="profile_sort">Sort</string>
 
@@ -180,7 +183,6 @@
     <string name="error_name_length">Name must be at least 2 characters</string>
     <string name="error_too_many_attempts">Too many attempts. Try again in a few minutes.</string>
     <string name="error_user_disabled">This account has been disabled</string>
-    <string name="error_registration_rolled_back">Registration did not complete. Try again.</string>
     <string name="error_title_length">Workout name must be 3 to 60 characters</string>
     <string name="error_description_length">Description can be up to 600 characters</string>
     <string name="error_duration_range">Duration must be between 1 and 600 minutes</string>
@@ -188,6 +190,7 @@
     <string name="error_camera_permission">Without camera access you can still pick a photo from the gallery</string>
 
     <!-- Content descriptions (accessibility) -->
+    <string name="cd_logo">The FitShare logo</string>
     <string name="cd_avatar">Profile photo</string>
     <string name="cd_workout_image">Workout photo</string>
     <string name="cd_like">Like</string>

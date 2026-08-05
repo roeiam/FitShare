@@ -22,6 +22,29 @@
         android:paddingEnd="@dimen/screen_padding_horizontal"
         android:paddingBottom="@dimen/space_xxl">
 
+        <!--
+            The brand mark, shared with the register screen so the two entry points match.
+
+            The artwork is the launcher icon's own square, which carries the navy background baked
+            in. Rendering it flat would put a hard dark square on the light theme's pale page, so it
+            goes through a ShapeableImageView with the card shape - the same 16dp radius as every
+            other rounded surface in the app. That turns the navy into a deliberate rounded badge
+            that reads the same way in both themes, instead of an artefact of the source file.
+
+            64dp, from dimens: a brand mark, not a hero image. The form is inside a ScrollView, so
+            even on a short screen the submit button stays reachable, and when the keyboard opens
+            the mark scrolls away rather than fighting it for space.
+        -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/logo"
+            android:layout_width="@dimen/logo_size"
+            android:layout_height="@dimen/logo_size"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="@dimen/space_lg"
+            android:contentDescription="@string/cd_logo"
+            android:src="@drawable/logo_fitshare"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.FitShare.Card" />
+
         <TextView
             style="@style/TextAppearance.FitShare.Headline"
             android:layout_width="match_parent"

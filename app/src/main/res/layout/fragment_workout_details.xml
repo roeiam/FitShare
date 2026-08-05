@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     A workout in full (SPEC section 5): hero image, title, tappable author row, meta chips,
-    description, the actions, and the comment thread.
+    description and the comment thread.
+
+    The two actions - like and save - live on the author row rather than on a row of their own. One
+    line carries who posted it and what you can do about it, which is a row less to scroll past
+    before reaching the comments.
 
     The comment input is pinned outside the scrolling area, so it stays reachable while the thread
     scrolls - and, with the shared keyboard handling, sits directly above the keyboard while typing.
@@ -102,83 +106,118 @@
                     android:layout_marginTop="@dimen/space_md"
                     tools:text="אימון כוח לפלג גוף עליון" />
 
-                <!-- Tappable author row: opens that user's profile, read-only -->
+                <!--
+                    ===== Author row =====
+
+                    One line: who posted it, and the two things you can do about it. Reading order
+                    under Hebrew RTL is avatar, name and time, then the like mark and the bookmark
+                    pinned together against the far end of the row.
+
+                    Only the identity block is clickable, not the whole line, so the ripple stops
+                    where the profile link stops and cannot sweep under the two buttons. It carries
+                    the weight, so a long Hebrew name is what gives way - the buttons keep their
+                    measured width and the name ellipsizes into whatever is left.
+                -->
                 <LinearLayout
-                    android:id="@+id/authorRow"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"
-                    android:background="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
-                    android:minHeight="@dimen/touch_target_min"
                     android:orientation="horizontal">
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/authorAvatar"
-                        android:layout_width="@dimen/avatar_size_small"
-                        android:layout_height="@dimen/avatar_size_small"
-                        android:contentDescription="@string/cd_avatar"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/placeholder_avatar"
-                        app:shapeAppearance="@style/ShapeAppearance.FitShare.Avatar" />
+                    <!--
+                        Tappable: opens that user's profile, read-only.
 
-                    <LinearLayout
+                        A ConstraintLayout rather than nested LinearLayouts, and the same avatar +
+                        name + time arrangement item_workout.xml already uses. Two levels of
+                        LinearLayout weight - one here, one around the text - would make this row the
+                        only place in the project measured twice on every layout pass, which is what
+                        lint's NestedWeights check is for.
+                    -->
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/authorIdentity"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/space_sm"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:background="?attr/selectableItemBackground"
+                        android:minHeight="@dimen/touch_target_min">
+
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/authorAvatar"
+                            android:layout_width="@dimen/avatar_size_small"
+                            android:layout_height="@dimen/avatar_size_small"
+                            android:contentDescription="@string/cd_avatar"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/placeholder_avatar"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:shapeAppearance="@style/ShapeAppearance.FitShare.Avatar" />
 
                         <TextView
                             android:id="@+id/authorName"
                             style="@style/TextAppearance.FitShare.Body"
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/space_sm"
                             android:ellipsize="end"
                             android:maxLines="1"
+                            app:layout_constraintBottom_toTopOf="@id/createdAt"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/authorAvatar"
+                            app:layout_constraintTop_toTopOf="@id/authorAvatar"
+                            app:layout_constraintVertical_chainStyle="packed"
                             tools:text="רועי עמור" />
 
                         <TextView
                             android:id="@+id/createdAt"
                             style="@style/TextAppearance.FitShare.Caption"
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/space_sm"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            app:layout_constraintBottom_toBottomOf="@id/authorAvatar"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/authorAvatar"
+                            app:layout_constraintTop_toBottomOf="@id/authorName"
                             tools:text="לפני 3 שעות" />
 
-                    </LinearLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <!--
+                        The two actions. Liking is a public reaction and saving is private
+                        housekeeping, so they stay visibly distinct - the heart-and-dumbbell mark
+                        and a bookmark - but they sit together, because they are the pair of things
+                        this screen lets you do.
+
+                        LikeButton sets its own 48dp minimum height in code; the bookmark gets its
+                        48dp from touch_target_min here.
+                    -->
+                    <com.roeiamor.fitshare.ui.common.LikeButton
+                        android:id="@+id/likeButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_sm" />
+
+                    <ImageButton
+                        android:id="@+id/favoriteButton"
+                        android:layout_width="@dimen/touch_target_min"
+                        android:layout_height="@dimen/touch_target_min"
+                        android:layout_marginStart="@dimen/space_xs"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/cd_favorite"
+                        android:src="@drawable/ic_bookmark_border" />
 
                 </LinearLayout>
 
-                <com.google.android.material.chip.ChipGroup
+                <!-- Shared with the feed card, see view_meta_chips.xml -->
+                <include
                     android:id="@+id/metaChips"
+                    layout="@layout/view_meta_chips"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_md"
-                    app:chipSpacingHorizontal="@dimen/space_xs"
-                    app:singleLine="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/categoryChip"
-                        style="@style/Widget.FitShare.Chip.Meta"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        tools:text="כוח" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/durationChip"
-                        style="@style/Widget.FitShare.Chip.Meta"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        tools:text="45 דקות" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/difficultyChip"
-                        style="@style/Widget.FitShare.Chip.Meta"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        tools:text="בינוני" />
-
-                </com.google.android.material.chip.ChipGroup>
+                    android:layout_marginTop="@dimen/space_md" />
 
                 <TextView
                     android:id="@+id/workoutDescription"
@@ -187,31 +226,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_md"
                     tools:text="תיאור האימון" />
-
-                <!-- ===== Actions ===== -->
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_lg"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <com.roeiamor.fitshare.ui.common.LikeButton
-                        android:id="@+id/likeButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <ImageButton
-                        android:id="@+id/favoriteButton"
-                        android:layout_width="@dimen/touch_target_min"
-                        android:layout_height="@dimen/touch_target_min"
-                        android:layout_marginStart="@dimen/space_lg"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:contentDescription="@string/cd_favorite"
-                        android:src="@drawable/ic_favorites" />
-
-                </LinearLayout>
 
                 <!-- ===== Comments ===== -->
 

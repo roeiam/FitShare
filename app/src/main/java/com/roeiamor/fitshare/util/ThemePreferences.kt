@@ -2,6 +2,7 @@ package com.roeiamor.fitshare.util
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 
 /**
  * Remembers whether the user prefers the dark or the light theme, across launches.
@@ -24,7 +25,7 @@ class ThemePreferences(context: Context) {
     var isDarkTheme: Boolean
         get() = preferences.getBoolean(KEY_DARK_THEME, DEFAULT_DARK)
         set(value) {
-            preferences.edit().putBoolean(KEY_DARK_THEME, value).apply()
+            preferences.edit { putBoolean(KEY_DARK_THEME, value) }
             applyToApp()
         }
 

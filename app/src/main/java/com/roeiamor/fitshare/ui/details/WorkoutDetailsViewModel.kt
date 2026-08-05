@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
  *
  * Four live streams are combined here - the workout, whether it is liked, whether it is saved, and
  * its comments - and the chain ends with `asLiveData()`, so the Fragment sees one `LiveData` of one
- * state (decision PHASE0_PLAN.md section 4.G).
+ * state (see README section 3, "live streams").
  *
  * Because all four are Firestore listeners, the screen is **self-correcting**: a like from another
  * device, a comment from another account, or the owner deleting the workout all arrive here without
@@ -144,6 +144,22 @@ class WorkoutDetailsViewModel(
         }
     }
 
+    /**
+     * Removes this workout from the signed-in user's favourites.
+     *
+     * Offered only from the [WorkoutDetailsUiState.Deleted] state, where it is the one way out of a
+     * saved entry that points at a workout the owner has since deleted. Nothing is changed locally:
+     * the removal is a write, the favourite listener reports it, and the state re-renders without
+     * the offer - which is also what stops the button being tapped twice.
+     */
+    fun onRemoveDeletedFavorite() {
+        viewModelScope.launch {
+            interactionRepository.removeFavorite(workoutId)
+                .onSuccess { _message.value = Event(R.string.details_unsaved) }
+                .onFailure { _message.value = Event(ErrorMapper.toMessageRes(it)) }
+        }
+    }
+
     /** Deletes the workout. Called after the confirmation dialog, and only offered to the owner. */
     fun onDeleteWorkoutConfirmed() {
         val workout = currentWorkout() ?: return
@@ -172,7 +188,8 @@ class WorkoutDetailsViewModel(
             return WorkoutDetailsUiState.Error(ErrorMapper.toMessageRes(failure.exceptionOrNull()))
         }
 
-        val workout = workoutResult.getOrNull() ?: return WorkoutDetailsUiState.Deleted
+        val workout = workoutResult.getOrNull()
+            ?: return WorkoutDetailsUiState.Deleted(favoriteResult.getOrDefault(false))
         val currentUserId = interactionRepository.currentUserId
 
         return WorkoutDetailsUiState.Content(

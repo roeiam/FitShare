@@ -13,7 +13,13 @@
     android:padding="@dimen/space_xl"
     android:visibility="gone">
 
+    <!--
+        The icon is swappable, because this layout serves more than "nothing here yet": the details
+        screen reuses it to say a workout was deleted, and a plus sign there invited the user to add
+        something they cannot. StateRenderer sets it, defaulting to the plus.
+    -->
     <ImageView
+        android:id="@+id/emptyIcon"
         android:layout_width="@dimen/state_icon_size"
         android:layout_height="@dimen/state_icon_size"
         android:importantForAccessibility="no"

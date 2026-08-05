@@ -2,55 +2,44 @@
 <!--
     Favorites: the workouts the signed-in user has saved.
 
-    The four states from SPEC section 5 live here: the content container plus the three shared
-    state layouts, included rather than copied. ui/common/StateRenderer decides which one shows.
+    The four states from SPEC section 5 live here: the list plus the three shared state layouts,
+    included rather than copied. ui/common/StateRenderer decides which one shows.
+
+    A FrameLayout is the root because the four states are stacked, not sequenced: exactly one is
+    visible at a time and they all occupy the same space. Nothing wraps it, and the list is the
+    content state itself - StateRenderer only needs one View to show and hide, and a RecyclerView
+    already is one. Wrapping either would add a level of hierarchy that measures nothing.
 
     One RecyclerView and nothing else - the whole screen comes from a single query, because a
     favourite is stored as a denormalized snapshot rather than a pointer (SPEC section 3).
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <FrameLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/favoritesList"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/screen_padding_horizontal"
+        android:paddingTop="@dimen/space_md"
+        android:paddingEnd="@dimen/screen_padding_horizontal"
+        android:visibility="gone"
+        tools:itemCount="4"
+        tools:listitem="@layout/item_favorite" />
 
-        <LinearLayout
-            android:id="@+id/content"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="gone">
+    <include
+        android:id="@+id/stateLoading"
+        layout="@layout/layout_state_loading" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/favoritesList"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingStart="@dimen/screen_padding_horizontal"
-                android:paddingTop="@dimen/space_md"
-                android:paddingEnd="@dimen/screen_padding_horizontal"
-                tools:itemCount="4"
-                tools:listitem="@layout/item_favorite" />
+    <include
+        android:id="@+id/stateEmpty"
+        layout="@layout/layout_state_empty" />
 
-        </LinearLayout>
+    <include
+        android:id="@+id/stateError"
+        layout="@layout/layout_state_error" />
 
-        <include
-            android:id="@+id/stateLoading"
-            layout="@layout/layout_state_loading" />
-
-        <include
-            android:id="@+id/stateEmpty"
-            layout="@layout/layout_state_empty" />
-
-        <include
-            android:id="@+id/stateError"
-            layout="@layout/layout_state_error" />
-
-    </FrameLayout>
-
-</LinearLayout>
+</FrameLayout>

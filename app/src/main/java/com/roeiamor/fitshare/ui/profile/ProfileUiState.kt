@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.profile
+﻿package com.roeiamor.fitshare.ui.profile
 
 import androidx.annotation.StringRes
 import com.roeiamor.fitshare.data.model.User
@@ -43,5 +43,5 @@ sealed interface ProfileUiState {
     data object Empty : ProfileUiState
 
     /** The read failed. [messageRes] is already mapped to Hebrew by ErrorMapper. */
-    data class Error(@StringRes val messageRes: Int) : ProfileUiState
+    data class Error(@param:StringRes val messageRes: Int) : ProfileUiState
 }

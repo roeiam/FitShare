@@ -6,14 +6,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.roeiamor.fitshare.R
-import com.roeiamor.fitshare.data.model.Difficulty
 import com.roeiamor.fitshare.data.model.Workout
-import com.roeiamor.fitshare.data.model.WorkoutCategory
 import com.roeiamor.fitshare.databinding.ItemWorkoutBinding
-import com.roeiamor.fitshare.ui.common.labelRes
-import com.roeiamor.fitshare.ui.common.relativeTimeText
-import com.roeiamor.fitshare.util.TimeFormatter
+import com.roeiamor.fitshare.ui.common.asCountLabel
+import com.roeiamor.fitshare.ui.common.bind
+import com.roeiamor.fitshare.ui.common.workoutTimeText
 import com.roeiamor.fitshare.util.loadAvatar
 import com.roeiamor.fitshare.util.loadWorkoutImage
 
@@ -59,21 +56,15 @@ class WorkoutAdapter(
 
             binding.authorName.text = workout.authorName
             binding.authorAvatar.loadAvatar(workout.authorPhotoUrl)
-            binding.createdAt.text = formatCreatedAt(workout)
+            binding.createdAt.text = context.workoutTimeText(workout.createdAt)
 
             binding.workoutImage.loadWorkoutImage(workout.imageUrl)
             binding.workoutTitle.text = workout.title
 
-            binding.categoryChip.setText(WorkoutCategory.fromName(workout.category).labelRes())
-            binding.durationChip.text = context.resources.getQuantityString(
-                R.plurals.unit_minutes,
-                workout.durationMinutes,
-                workout.durationMinutes
-            )
-            binding.difficultyChip.setText(Difficulty.fromName(workout.difficulty).labelRes())
+            binding.metaChips.bind(workout)
 
-            binding.likesCount.text = workout.likesCount.toString()
-            binding.commentsCount.text = workout.commentsCount.toString()
+            binding.likesCount.text = workout.likesCount.asCountLabel()
+            binding.commentsCount.text = workout.commentsCount.asCountLabel()
 
             binding.root.setOnClickListener { onWorkoutClick(workout) }
 
@@ -83,22 +74,6 @@ class WorkoutAdapter(
             val openAuthor = View.OnClickListener { onAuthorClick(workout.authorId) }
             binding.authorName.setOnClickListener(openAuthor)
             binding.authorAvatar.setOnClickListener(openAuthor)
-        }
-
-        /**
-         * The relative time under the author's name.
-         *
-         * `createdAt` is null for the moment between a local write and the server acknowledging it,
-         * so a just-published workout would otherwise have a blank timestamp. Treating null as
-         * "now" is both true and the least surprising thing to show.
-         */
-        private fun formatCreatedAt(workout: Workout): String {
-            val context = binding.root.context
-            val createdAtMillis = workout.createdAt?.toDate()?.time
-                ?: return context.getString(R.string.time_now)
-
-            val relative = TimeFormatter.describe(createdAtMillis, System.currentTimeMillis())
-            return context.relativeTimeText(relative)
         }
     }
 

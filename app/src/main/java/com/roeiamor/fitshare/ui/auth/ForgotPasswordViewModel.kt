@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.auth
+﻿package com.roeiamor.fitshare.ui.auth
 
 import androidx.annotation.StringRes
 import androidx.lifecycle.LiveData
@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  * @property isLoading whether the request is in flight.
  */
 data class ForgotPasswordUiState(
-    @StringRes val emailError: Int? = null,
+    @param:StringRes val emailError: Int? = null,
     val isSubmitEnabled: Boolean = false,
     val isLoading: Boolean = false
 )

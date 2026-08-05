@@ -1,4 +1,4 @@
-package com.roeiamor.fitshare.ui.details
+﻿package com.roeiamor.fitshare.ui.details
 
 import androidx.annotation.StringRes
 import com.roeiamor.fitshare.data.model.Comment
@@ -38,9 +38,15 @@ sealed interface WorkoutDetailsUiState {
      *
      * Its own state rather than an error: someone deleting their workout while you are looking at it
      * is a normal thing to happen, not a failure, and "try again" would be the wrong offer.
+     *
+     * @property isFavorite whether the signed-in user still has this workout saved. Deleting a
+     *   workout does not touch anyone else's favourites - it cannot, since the rules only let a user
+     *   write their own - so a saved copy outlives the workout and is the only thing left pointing
+     *   at it. When that is the case this screen is the one place the user can reach it, so it
+     *   offers to remove it rather than leaving a row that opens onto nothing forever.
      */
-    data object Deleted : WorkoutDetailsUiState
+    data class Deleted(val isFavorite: Boolean) : WorkoutDetailsUiState
 
     /** The read failed. [messageRes] is already Hebrew. */
-    data class Error(@StringRes val messageRes: Int) : WorkoutDetailsUiState
+    data class Error(@param:StringRes val messageRes: Int) : WorkoutDetailsUiState
 }

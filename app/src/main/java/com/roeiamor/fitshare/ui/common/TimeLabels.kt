@@ -1,8 +1,10 @@
 package com.roeiamor.fitshare.ui.common
 
 import android.content.Context
+import com.google.firebase.Timestamp
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.util.RelativeTime
+import com.roeiamor.fitshare.util.TimeFormatter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,4 +39,20 @@ fun Context.relativeTimeText(time: RelativeTime): String = when (time) {
 
     is RelativeTime.Older ->
         SimpleDateFormat(OLDER_DATE_PATTERN, Locale.getDefault()).format(Date(time.timestampMillis))
+}
+
+/**
+ * The Hebrew "how long ago" line for anything Firestore stamped with `@ServerTimestamp`.
+ *
+ * Handles the null that the feed card, the comment row and the details screen all had to handle
+ * separately before this existed: between a local write and the server acknowledging it, `createdAt`
+ * really is null, so a workout published a second ago would otherwise show a blank timestamp.
+ * Treating null as "just now" is both true and the least surprising thing to show.
+ *
+ * The three call sites used to carry their own copy of exactly this, which is three chances for the
+ * "just published" case to be forgotten in one of them.
+ */
+fun Context.workoutTimeText(createdAt: Timestamp?): String {
+    val millis = createdAt?.toDate()?.time ?: return getString(R.string.time_now)
+    return relativeTimeText(TimeFormatter.describe(millis, System.currentTimeMillis()))
 }

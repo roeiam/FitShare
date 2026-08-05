@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Auto Backup rules for API 30 and below. Referenced from the Manifest's android:fullBackupContent.
+
+    Nothing is included or excluded, on purpose. The only thing FitShare stores on the device is the
+    theme choice in SharedPreferences (util/ThemePreferences.kt); everything else - the account, the
+    workouts, the comments, the favourites - lives in Firebase and comes back on the next sign-in.
+    Backing up the theme flag is harmless, and an empty ruleset is what asks for the default
+    behaviour rather than an accidental one.
 -->
-<full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
-</full-backup-content>
+<full-backup-content />

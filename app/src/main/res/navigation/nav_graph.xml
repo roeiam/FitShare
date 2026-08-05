@@ -5,6 +5,8 @@
     No app:startDestination is set here on purpose. MainActivity picks it at runtime - feed when a
     session already exists, login otherwise - so the graph is inflated once, in code, with the right
     start destination. Declaring one here as well would briefly show the wrong screen on launch.
+    That is what tools:ignore="InvalidNavigation" below is for: lint is right that a graph normally
+    needs one, and wrong about this graph.
 
     Nine destinations, not ten: there is no separate UserProfileFragment. profileFragment takes a
     nullable userId argument and serves both "my profile" and "someone else's profile".
@@ -12,7 +14,8 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph">
+    android:id="@+id/nav_graph"
+    tools:ignore="InvalidNavigation">
 
     <!--
         Logout, reachable from anywhere. popUpTo the graph itself with inclusive=true empties the
