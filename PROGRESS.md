@@ -482,6 +482,11 @@ document the submission needs.
   location in the console and three independent ways to verify it actually took effect — the Rules
   Playground, an unauthenticated REST call that must return **403**, and a seven-step pass over the
   app to prove the rules are not *too* tight.
+- **Published, and verified against the live server.** Roei pasted the rules into the console and
+  pressed Publish. The decisive check is the one that does not trust the console: an
+  unauthenticated REST read of `/documents/workouts` returned **200 before publishing and 403
+  after**. That is the difference between "rules were written" and "the server enforces them", and
+  it is worth demonstrating exactly that way in the video.
 
 ### Cleanup
 
@@ -524,15 +529,13 @@ reports and `NAV_UI_FIXES.md` were deleted — working files, not deliverables.
 
 ### Still open
 
-1. **The rules are committed but not yet published.** A file in the repository does not affect the
-   server. Roei must paste `firestore.rules` into the console and press Publish; `README.md` §8 is
-   the checklist.
-2. **The device has no signed-in session.** Running `connectedDebugAndroidTest` reinstalls the app,
-   which clears its data. Sign in again on the phone before recording.
-3. **Five of the six README screenshots are placeholders.** The details screen is captured; the
+1. **Five of the six README screenshots are placeholders.** The details screen is captured; the
    other five need one pass through the app.
-4. **`error_image_upload` is defined but unreachable** — kept because SPEC §11 asks for it, not
+2. **`error_image_upload` is defined but unreachable** — kept because SPEC §11 asks for it, not
    fixed because that is a behaviour change and the code was frozen. See `README.md` §9 item 4.
+
+Closed since: the security rules are published and verified (200 → 403), and the phone is signed in
+again after `connectedDebugAndroidTest` cleared its data.
 
 ---
 
