@@ -69,6 +69,16 @@ class FeedViewModel(private val workoutRepository: WorkoutRepository) : ViewMode
         query.value = query.value.copy(category = category)
     }
 
+    /**
+     * Called when the user picks a sort chip.
+     *
+     * Goes into [FeedQuery] rather than being applied to the loaded list, because ordering is the
+     * server's job: sorting locally would only order the workouts that happen to have arrived.
+     */
+    fun onSortSelected(sort: FeedSort) {
+        query.value = query.value.copy(sort = sort)
+    }
+
     /** Called on every keystroke in the search field. */
     fun onSearchChanged(text: String) {
         searchText.value = text

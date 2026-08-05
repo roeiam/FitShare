@@ -9,6 +9,9 @@ import com.roeiamor.fitshare.data.remote.AuthDataSource
 import com.roeiamor.fitshare.data.remote.ImageUploader
 import com.roeiamor.fitshare.data.remote.UserDataSource
 import com.roeiamor.fitshare.data.remote.WorkoutDataSource
+import com.roeiamor.fitshare.util.FIRESTORE_TIMEOUT_MS
+import com.roeiamor.fitshare.util.NetworkGuard
+import com.roeiamor.fitshare.util.UPLOAD_TIMEOUT_MS
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -75,7 +78,8 @@ class WorkoutRepositoryImpl(
     private val workoutDataSource: WorkoutDataSource,
     private val userDataSource: UserDataSource,
     private val authDataSource: AuthDataSource,
-    private val imageUploader: ImageUploader
+    private val imageUploader: ImageUploader,
+    private val networkGuard: NetworkGuard
 ) : WorkoutRepository {
 
     override fun observeFeed(
@@ -84,7 +88,7 @@ class WorkoutRepositoryImpl(
     ): Flow<Result<List<Workout>>> = workoutDataSource.observeFeed(category, sort)
 
     override suspend fun getWorkout(id: String): Result<Workout?> =
-        workoutDataSource.getWorkout(id)
+        networkGuard.run { workoutDataSource.getWorkout(id) }
 
     override fun observeWorkout(id: String): Flow<Result<Workout?>> =
         workoutDataSource.observeWorkout(id)
@@ -101,7 +105,9 @@ class WorkoutRepositoryImpl(
         if (userId == null || userId != workout.authorId) {
             return Result.failure(IllegalStateException("Only the author can delete a workout"))
         }
-        return workoutDataSource.deleteWorkout(workout.id, workout.authorId)
+        return networkGuard.run {
+            workoutDataSource.deleteWorkout(workout.id, workout.authorId)
+        }
     }
 
     /**
@@ -112,6 +118,15 @@ class WorkoutRepositoryImpl(
      * title of a workout does not silently remove its photo.
      */
     override suspend fun updateWorkout(
+        workoutId: String,
+        draft: WorkoutDraft,
+        imageUri: Uri?
+    ): Result<Unit> = networkGuard.run(timeoutFor(imageUri)) {
+        updateWorkoutInternal(workoutId, draft, imageUri)
+    }
+
+    /** Separate from the public method so [NetworkGuard] can wrap its early returns. */
+    private suspend fun updateWorkoutInternal(
         workoutId: String,
         draft: WorkoutDraft,
         imageUri: Uri?
@@ -153,7 +168,24 @@ class WorkoutRepositoryImpl(
      * renders from one query, and looking the author up per card would turn a 20-card feed into 21
      * reads.
      */
-    override suspend fun createWorkout(draft: WorkoutDraft, imageUri: Uri?): Result<Unit> {
+    override suspend fun createWorkout(draft: WorkoutDraft, imageUri: Uri?): Result<Unit> =
+        networkGuard.run(timeoutFor(imageUri)) { createWorkoutInternal(draft, imageUri) }
+
+    /**
+     * How long publishing or editing may take.
+     *
+     * Only a call that actually uploads a photo gets the long budget. A workout with no photo is a
+     * plain Firestore write, so making it wait the upload timeout would leave the user watching a
+     * spinner for two minutes with no connection instead of fifteen seconds.
+     */
+    private fun timeoutFor(imageUri: Uri?): Long =
+        if (imageUri == null) FIRESTORE_TIMEOUT_MS else UPLOAD_TIMEOUT_MS
+
+    /** Separate from the public method so [NetworkGuard] can wrap its early returns. */
+    private suspend fun createWorkoutInternal(
+        draft: WorkoutDraft,
+        imageUri: Uri?
+    ): Result<Unit> {
         val authorId = authDataSource.currentUserId
             ?: return Result.failure(IllegalStateException("Publishing requires a signed-in user"))
 

@@ -85,6 +85,11 @@
         <action
             android:id="@+id/action_feed_to_addWorkout"
             app:destination="@id/addWorkoutFragment" />
+
+        <!-- Tapping a card's author opens that user's profile, read-only -->
+        <action
+            android:id="@+id/action_feed_to_profile"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment

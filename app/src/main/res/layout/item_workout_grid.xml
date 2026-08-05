@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One cell of the profile's workout grid (SPEC section 5).
+
+    Deliberately not item_workout.xml: a grid cell is a third of the screen wide, so the author row,
+    the chips and the counters would be unreadable in it. It shows the photo and the title, and
+    tapping it opens the same details screen.
+
+    ConstraintLayout rather than a LinearLayout because the photo has to stay square whatever the
+    device width - and layout_constraintDimensionRatio is the only thing that keeps it square. A
+    fixed dp height would go wrong on the first phone with a different screen.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gridCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/grid_item_gap"
+    android:checkable="false"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardElevation="@dimen/elevation_card"
+    app:shapeAppearance="@style/ShapeAppearance.FitShare.Card"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/gridImage"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="@string/cd_workout_image"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder_workout"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!--
+            minLines="2" so every cell is the same height whether its title wraps or not; without it
+            a row of three cells would have three different heights.
+        -->
+        <TextView
+            android:id="@+id/gridTitle"
+            style="@style/TextAppearance.FitShare.Label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:minLines="2"
+            android:padding="@dimen/space_sm"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/gridImage"
+            tools:text="אימון כוח לפלג גוף עליון" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

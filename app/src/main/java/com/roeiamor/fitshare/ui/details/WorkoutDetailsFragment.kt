@@ -80,9 +80,7 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
 
         binding.authorRow.setOnClickListener {
             val authorId = viewModel.currentWorkout()?.authorId ?: return@setOnClickListener
-            findNavController().navigate(
-                WorkoutDetailsFragmentDirections.actionWorkoutDetailsToProfile(userId = authorId)
-            )
+            openProfile(authorId)
         }
 
         binding.commentInput.doAfterTextChanged {
@@ -190,12 +188,25 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
         if (commentAdapter == null) {
             commentAdapter = CommentAdapter(
                 currentUserId = state.currentUserId,
-                onDeleteRequested = ::confirmDeleteComment
+                onDeleteRequested = ::confirmDeleteComment,
+                onAuthorClick = ::openProfile
             )
             binding.commentsList.adapter = commentAdapter
         }
         commentAdapter?.submitList(state.comments)
         binding.noComments.isVisible = state.comments.isEmpty()
+    }
+
+    /**
+     * Opens a user's profile, read-only.
+     *
+     * Shared by the workout's author row and by every comment author, so the same navigation is
+     * written once rather than twice.
+     */
+    private fun openProfile(userId: String) {
+        findNavController().navigate(
+            WorkoutDetailsFragmentDirections.actionWorkoutDetailsToProfile(userId = userId)
+        )
     }
 
     private fun formatCreatedAt(workout: Workout): String {

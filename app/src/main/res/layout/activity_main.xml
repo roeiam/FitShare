@@ -16,6 +16,32 @@
     android:background="?android:attr/colorBackground"
     tools:context=".MainActivity">
 
+    <!--
+        The no-connection banner (SPEC section 6).
+
+        It lives on the Activity rather than on each screen: connectivity is a property of the
+        device, not of whichever fragment happens to be showing, so putting it here means every
+        screen gets it and a new screen cannot forget it.
+
+        Gone by default. A gone view in ConstraintLayout collapses to a point, so the nav host sits
+        at the top of the screen whenever the banner is hidden.
+    -->
+    <TextView
+        android:id="@+id/offlineBanner"
+        style="@style/TextAppearance.FitShare.Label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/danger"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_sm"
+        android:text="@string/error_no_network"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/navHostFragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -25,7 +51,7 @@
         app:layout_constraintBottom_toTopOf="@id/bottomNav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/offlineBanner" />
 
     <!--
         labelVisibilityMode="labeled" is deliberate. With four items the default mode labels only

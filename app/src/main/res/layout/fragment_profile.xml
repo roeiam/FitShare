@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Profile - serves both my own profile and another user's, chosen by the nullable userId
-    argument. Phase 7 fills the content container with the avatar, name, bio, the three stats
-    and the grid of workouts.
+    argument (SPEC section 5). The edit, theme and logout controls exist only on my own.
 
     The four states from SPEC section 5 live here: the content container plus the three shared
     state layouts, included rather than copied. ui/common/StateRenderer decides which one shows.
+
+    The header is fixed and only the grid scrolls. There is deliberately no ScrollView: nesting a
+    RecyclerView inside one defeats view recycling, because the RecyclerView is then measured
+    unbounded and lays out every cell at once - which is the standard way to make a list janky.
+
+    RTL: Start/End throughout; the three statistics read right to left on their own.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -23,9 +29,144 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingStart="@dimen/screen_padding_horizontal"
-            android:paddingEnd="@dimen/screen_padding_horizontal"
-            android:visibility="gone" />
+            android:visibility="gone">
+
+            <!-- ===== Header ===== -->
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/avatar"
+                android:layout_width="@dimen/avatar_size_large"
+                android:layout_height="@dimen/avatar_size_large"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/space_lg"
+                android:contentDescription="@string/cd_avatar"
+                android:scaleType="centerCrop"
+                android:src="@drawable/placeholder_avatar"
+                app:shapeAppearance="@style/ShapeAppearance.FitShare.Avatar" />
+
+            <TextView
+                android:id="@+id/displayName"
+                style="@style/TextAppearance.FitShare.Headline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:paddingStart="@dimen/screen_padding_horizontal"
+                android:paddingEnd="@dimen/screen_padding_horizontal"
+                android:textAlignment="center" />
+
+            <!-- Gone when the user has not written one, so the layout does not keep an empty gap -->
+            <TextView
+                android:id="@+id/bio"
+                style="@style/TextAppearance.FitShare.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:maxHeight="@dimen/profile_bio_max_height"
+                android:paddingStart="@dimen/screen_padding_horizontal"
+                android:paddingEnd="@dimen/screen_padding_horizontal"
+                android:scrollbars="vertical"
+                android:textAlignment="center" />
+
+            <!-- ===== The three statistics (SPEC section 5) ===== -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_lg"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <include
+                    android:id="@+id/statWorkouts"
+                    layout="@layout/view_profile_stat" />
+
+                <include
+                    android:id="@+id/statLikes"
+                    layout="@layout/view_profile_stat" />
+
+                <include
+                    android:id="@+id/statFavorites"
+                    layout="@layout/view_profile_stat" />
+
+            </LinearLayout>
+
+            <!-- ===== Own-profile controls ===== -->
+
+            <LinearLayout
+                android:id="@+id/ownerActions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/screen_padding_horizontal"
+                android:paddingEnd="@dimen/screen_padding_horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editProfile"
+                    style="@style/Widget.FitShare.Button.Text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/touch_target_min"
+                    android:text="@string/profile_edit" />
+
+                <!--
+                    The theme toggle. A switch rather than a button because it shows the current
+                    state as well as changing it, and the user needs to know which theme they are in.
+                -->
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/themeSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/touch_target_min"
+                    android:paddingStart="@dimen/space_md"
+                    android:paddingEnd="@dimen/space_md"
+                    android:text="@string/profile_theme" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/logout"
+                    style="@style/Widget.FitShare.Button.Text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/touch_target_min"
+                    android:text="@string/profile_logout"
+                    android:textColor="?attr/colorError" />
+
+            </LinearLayout>
+
+            <!-- ===== The workout grid ===== -->
+
+            <!--
+                Shown instead of the grid when this user has published nothing. Not the screen's
+                empty state: the profile itself loaded fine and still has a name, a bio and an
+                avatar worth showing.
+            -->
+            <TextView
+                android:id="@+id/noWorkouts"
+                style="@style/TextAppearance.FitShare.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xl"
+                android:paddingStart="@dimen/screen_padding_horizontal"
+                android:paddingEnd="@dimen/screen_padding_horizontal"
+                android:textAlignment="center"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/workoutGrid"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/space_md"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_sm"
+                android:paddingBottom="@dimen/space_md"
+                tools:itemCount="6"
+                tools:listitem="@layout/item_workout_grid" />
+
+        </LinearLayout>
 
         <include
             android:id="@+id/stateLoading"
@@ -40,33 +181,5 @@
             layout="@layout/layout_state_error" />
 
     </FrameLayout>
-
-    <!--
-        Shown only on my own profile; hidden when viewing someone else's (SPEC section 5).
-        This is the real control, not scaffolding - Phase 7 moves it next to the avatar and adds
-        the theme toggle and logout beside it.
-    -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/editProfile"
-        style="@style/Widget.FitShare.Button.Text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/screen_padding_horizontal"
-        android:layout_marginEnd="@dimen/screen_padding_horizontal"
-        android:minHeight="@dimen/touch_target_min"
-        android:text="@string/profile_edit" />
-
-    <!-- Also own-profile only. Confirms before signing out; the action empties the back stack. -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/logout"
-        style="@style/Widget.FitShare.Button.Text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/screen_padding_horizontal"
-        android:layout_marginEnd="@dimen/screen_padding_horizontal"
-        android:layout_marginBottom="@dimen/space_sm"
-        android:minHeight="@dimen/touch_target_min"
-        android:text="@string/profile_logout"
-        android:textColor="?attr/colorError" />
 
 </LinearLayout>

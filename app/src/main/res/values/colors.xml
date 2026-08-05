@@ -40,4 +40,15 @@
     -->
     <color name="link_text">#FF0B7A4A</color>
 
+
+    <!--
+        Fill for the image and avatar placeholders.
+
+        Not colorSurfaceVariant, which is what these used at first: in the light theme that attribute
+        resolves to @color/cloud, and so does android:colorBackground - so a workout with no photo
+        drew a cloud rectangle on a cloud page and was invisible. Caught by screenshotting the light
+        theme on the device, not by reading the code.
+    -->
+    <color name="placeholder_fill">#FFE3E9F2</color>
+
 </resources>

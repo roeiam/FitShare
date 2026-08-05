@@ -92,6 +92,7 @@
     <string name="favorites_empty_body">Save a workout from the feed to come back to it anytime</string>
     <string name="favorites_empty_action">Go to the feed</string>
     <string name="favorites_remove_confirm">Remove this workout from favorites?</string>
+    <string name="favorites_author_category">%1$s · %2$s</string>
 
     <!-- Profile -->
     <string name="profile_title">My profile</string>
@@ -106,6 +107,10 @@
     <string name="profile_empty_body">Your first workout will show up here</string>
     <string name="profile_empty_title_other">This user has not posted any workouts</string>
     <string name="profile_empty_body_other">Their workouts will show up here</string>
+    <string name="profile_no_workouts">You have not posted any workouts</string>
+    <string name="profile_no_workouts_other">This user has not posted any workouts</string>
+    <string name="profile_stat_unavailable">—</string>
+    <string name="profile_sort">Sort</string>
 
     <!-- Edit profile -->
     <string name="edit_profile_title">Edit profile</string>

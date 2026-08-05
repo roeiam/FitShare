@@ -153,6 +153,63 @@ class WorkoutDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
+     * Watches everything one user has published, newest first.
+     *
+     * **Sorted in Kotlin rather than by Firestore, on purpose.** `whereEqualTo` plus `orderBy` on a
+     * different field needs a composite index, and this app already needs one for the category feed.
+     * A single equality filter needs none, so ordering here keeps the project to exactly one index a
+     * grader has to create before the app works. A profile holds a handful of workouts, so sorting
+     * them on the device costs nothing measurable.
+     *
+     * `createdAt` is null for the moment between a local write and the server acknowledging it, so
+     * those sort to the top - which is where a just-published workout belongs anyway.
+     */
+    fun observeUserWorkouts(userId: String): Flow<Result<List<Workout>>> = callbackFlow {
+        val registration = workoutsCollection
+            .whereEqualTo(FIELD_AUTHOR_ID, userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                val workouts = snapshot?.documents.orEmpty()
+                    .mapNotNull { document -> document.toObject(Workout::class.java) }
+                    .sortedByDescending { it.createdAt }
+                trySend(Result.success(workouts))
+            }
+
+        awaitClose { registration.remove() }
+    }
+
+    /**
+     * Rewrites the denormalized author name and photo on every workout this user has published.
+     *
+     * Needed because those fields are copies (SPEC section 3): without this, renaming yourself would
+     * leave your old name on every workout already in the feed. One [com.google.firebase.firestore.WriteBatch]
+     * so the feed never shows a mix of old and new names.
+     *
+     * @return the number of workouts rewritten, so the caller can say nothing was needed.
+     */
+    suspend fun updateDenormalizedAuthor(
+        userId: String,
+        displayName: String,
+        photoUrl: String?
+    ): Result<Int> = safeCall {
+        val owned = workoutsCollection.whereEqualTo(FIELD_AUTHOR_ID, userId).get().await()
+        if (owned.isEmpty) return@safeCall 0
+
+        val batch = firestore.batch()
+        owned.documents.forEach { document ->
+            batch.update(
+                document.reference,
+                mapOf(FIELD_AUTHOR_NAME to displayName, FIELD_AUTHOR_PHOTO_URL to photoUrl)
+            )
+        }
+        batch.commit().await()
+        owned.size()
+    }
+
+    /**
      * Builds the feed query.
      *
      * Filtering by category *and* ordering by `createdAt` needs a composite index - Firestore
@@ -183,6 +240,9 @@ class WorkoutDataSource(private val firestore: FirebaseFirestore) {
 
         const val FIELD_CATEGORY = "category"
         const val FIELD_CREATED_AT = "createdAt"
+        const val FIELD_AUTHOR_ID = "authorId"
+        const val FIELD_AUTHOR_NAME = "authorName"
+        const val FIELD_AUTHOR_PHOTO_URL = "authorPhotoUrl"
         const val FIELD_LIKES_COUNT = "likesCount"
         const val FIELD_WORKOUTS_COUNT = "workoutsCount"
     }

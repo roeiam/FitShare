@@ -154,10 +154,7 @@ class InteractionDataSource(private val firestore: FirebaseFirestore) {
      * @return true if the workout is saved after this call.
      */
     suspend fun toggleFavorite(workout: Workout, userId: String): Result<Boolean> = safeCall {
-        val favoriteRef = firestore.collection(COLLECTION_USERS)
-            .document(userId)
-            .collection(COLLECTION_FAVORITES)
-            .document(workout.id)
+        val favoriteRef = favoritesCollection(userId).document(workout.id)
 
         firestore.runTransaction { transaction ->
             val alreadySaved = transaction.get(favoriteRef).exists()
@@ -183,9 +180,7 @@ class InteractionDataSource(private val firestore: FirebaseFirestore) {
 
     /** Watches whether this workout is in the user's favourites. */
     fun observeIsFavorite(workoutId: String, userId: String): Flow<Result<Boolean>> = callbackFlow {
-        val registration = firestore.collection(COLLECTION_USERS)
-            .document(userId)
-            .collection(COLLECTION_FAVORITES)
+        val registration = favoritesCollection(userId)
             .document(workoutId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -197,6 +192,48 @@ class InteractionDataSource(private val firestore: FirebaseFirestore) {
 
         awaitClose { registration.remove() }
     }
+
+    /**
+     * Watches everything the user has saved, most recently saved first.
+     *
+     * This is the payoff for storing a denormalized snapshot rather than a pointer: the whole
+     * Favorites screen is **one query**. Holding only workout ids would mean a read per saved item
+     * every time the screen opens - twenty favourites, twenty-one reads, against a free-tier daily
+     * budget.
+     *
+     * Ordering by a single field inside a subcollection uses Firestore's automatic index, so unlike
+     * the category feed this needs no composite index.
+     */
+    fun observeFavorites(userId: String): Flow<Result<List<FavoriteWorkout>>> = callbackFlow {
+        val registration = favoritesCollection(userId)
+            .orderBy(FIELD_SAVED_AT, Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(Result.failure(error))
+                    return@addSnapshotListener
+                }
+                val favorites = snapshot?.documents.orEmpty().mapNotNull { document ->
+                    document.toObject(FavoriteWorkout::class.java)
+                }
+                trySend(Result.success(favorites))
+            }
+
+        awaitClose { registration.remove() }
+    }
+
+    /**
+     * Removes one saved workout.
+     *
+     * Separate from [toggleFavorite] because the Favorites screen removes by id: the workout itself
+     * may have been deleted by its author since it was saved, so there is no [Workout] to toggle.
+     * Deleting a document that is already gone is not an error in Firestore, so a double tap is safe.
+     */
+    suspend fun removeFavorite(userId: String, workoutId: String): Result<Unit> = safeCall {
+        favoritesCollection(userId).document(workoutId).delete().await()
+    }
+
+    private fun favoritesCollection(userId: String) =
+        firestore.collection(COLLECTION_USERS).document(userId).collection(COLLECTION_FAVORITES)
 
     private fun workoutDocument(workoutId: String) =
         firestore.collection(COLLECTION_WORKOUTS).document(workoutId)
@@ -211,6 +248,7 @@ class InteractionDataSource(private val firestore: FirebaseFirestore) {
         const val FIELD_LIKES_COUNT = "likesCount"
         const val FIELD_COMMENTS_COUNT = "commentsCount"
         const val FIELD_CREATED_AT = "createdAt"
+        const val FIELD_SAVED_AT = "savedAt"
         const val FIELD_UID = "uid"
     }
 }

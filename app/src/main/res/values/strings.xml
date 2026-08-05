@@ -90,6 +90,8 @@
     <string name="favorites_empty_body">שמור אימון מהפיד כדי לחזור אליו מתי שתרצה</string>
     <string name="favorites_empty_action">מעבר לפיד</string>
     <string name="favorites_remove_confirm">להסיר את האימון מהמועדפים?</string>
+    <!-- Author and category on a saved row: "רועי · כוח" -->
+    <string name="favorites_author_category">%1$s · %2$s</string>
 
     <!-- Profile -->
     <string name="profile_title">הפרופיל שלי</string>
@@ -104,6 +106,11 @@
     <string name="profile_empty_body">האימון הראשון שלך יופיע כאן</string>
     <string name="profile_empty_title_other">המשתמש עוד לא העלה אימונים</string>
     <string name="profile_empty_body_other">כשיעלה אימון, הוא יופיע כאן</string>
+    <string name="profile_no_workouts">עוד לא העלית אימונים</string>
+    <string name="profile_no_workouts_other">המשתמש עוד לא העלה אימונים</string>
+    <!-- Shown for a statistic that cannot be read: another user's favourites are private -->
+    <string name="profile_stat_unavailable">—</string>
+    <string name="profile_sort">מיון</string>
 
     <!-- Edit profile -->
     <string name="edit_profile_title">עריכת פרופיל</string>

@@ -3,6 +3,7 @@ package com.roeiamor.fitshare.data.repository
 import com.roeiamor.fitshare.data.model.User
 import com.roeiamor.fitshare.data.remote.AuthDataSource
 import com.roeiamor.fitshare.data.remote.UserDataSource
+import com.roeiamor.fitshare.util.NetworkGuard
 
 /**
  * Everything the app can do with accounts and sessions.
@@ -44,7 +45,8 @@ interface AuthRepository {
  */
 class AuthRepositoryImpl(
     private val authDataSource: AuthDataSource,
-    private val userDataSource: UserDataSource
+    private val userDataSource: UserDataSource,
+    private val networkGuard: NetworkGuard
 ) : AuthRepository {
 
     override val isSignedIn: Boolean get() = authDataSource.currentUser != null
@@ -68,7 +70,20 @@ class AuthRepositoryImpl(
      * the failure. The account survives without a profile, and [login] repairs it on the next
      * successful sign-in. Documented in PROGRESS.md.
      */
-    override suspend fun register(name: String, email: String, password: String): Result<User> {
+    override suspend fun register(name: String, email: String, password: String): Result<User> =
+        networkGuard.run { registerInternal(name, email, password) }
+
+    /**
+     * The real registration, kept separate so [NetworkGuard] can wrap it.
+     *
+     * It is a named function rather than a lambda body because it returns early in several places,
+     * and [NetworkGuard] takes a non-inline suspend block - early returns cannot cross it.
+     */
+    private suspend fun registerInternal(
+        name: String,
+        email: String,
+        password: String
+    ): Result<User> {
         val signUpResult = authDataSource.signUp(email.trim(), password)
         val firebaseUser = signUpResult.getOrElse { return Result.failure(it) }
 
@@ -95,7 +110,11 @@ class AuthRepositoryImpl(
      * case [register] could not clean up itself, and means a user can never be stuck signed in to an
      * account with no profile.
      */
-    override suspend fun login(email: String, password: String): Result<User> {
+    override suspend fun login(email: String, password: String): Result<User> =
+        networkGuard.run { loginInternal(email, password) }
+
+    /** The real sign-in; separate for the same reason as [registerInternal]. */
+    private suspend fun loginInternal(email: String, password: String): Result<User> {
         val signInResult = authDataSource.signIn(email.trim(), password)
         val firebaseUser = signInResult.getOrElse { return Result.failure(it) }
 
@@ -113,7 +132,7 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun sendPasswordReset(email: String): Result<Unit> =
-        authDataSource.sendPasswordReset(email.trim())
+        networkGuard.run { authDataSource.sendPasswordReset(email.trim()) }
 
     override fun logout() {
         authDataSource.signOut()

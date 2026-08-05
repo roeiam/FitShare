@@ -1,6 +1,7 @@
 package com.roeiamor.fitshare.ui.feed
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -25,9 +26,11 @@ import com.roeiamor.fitshare.util.loadWorkoutImage
  * card and lose the scroll position on every remote change; DiffUtil rebinds only what differs.
  *
  * @param onWorkoutClick invoked with the tapped workout, so the Fragment owns navigation.
+ * @param onAuthorClick invoked with the author's uid when their name or avatar is tapped.
  */
 class WorkoutAdapter(
-    private val onWorkoutClick: (Workout) -> Unit
+    private val onWorkoutClick: (Workout) -> Unit,
+    private val onAuthorClick: (String) -> Unit
 ) : ListAdapter<Workout, WorkoutAdapter.WorkoutViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WorkoutViewHolder {
@@ -36,7 +39,7 @@ class WorkoutAdapter(
             parent,
             false
         )
-        return WorkoutViewHolder(binding, onWorkoutClick)
+        return WorkoutViewHolder(binding, onWorkoutClick, onAuthorClick)
     }
 
     override fun onBindViewHolder(holder: WorkoutViewHolder, position: Int) {
@@ -46,7 +49,8 @@ class WorkoutAdapter(
     /** Holds one card and knows how to fill it from a [Workout]. */
     class WorkoutViewHolder(
         private val binding: ItemWorkoutBinding,
-        private val onWorkoutClick: (Workout) -> Unit
+        private val onWorkoutClick: (Workout) -> Unit,
+        private val onAuthorClick: (String) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         /** Fills every view on the card. Sets each one unconditionally, because views are recycled. */
@@ -72,6 +76,13 @@ class WorkoutAdapter(
             binding.commentsCount.text = workout.commentsCount.toString()
 
             binding.root.setOnClickListener { onWorkoutClick(workout) }
+
+            // Only the name and the avatar open the profile - the rest of the card opens the
+            // workout. Making the whole author row clickable would put a second target inside a
+            // card that is already one big button, and a near miss would go somewhere unexpected.
+            val openAuthor = View.OnClickListener { onAuthorClick(workout.authorId) }
+            binding.authorName.setOnClickListener(openAuthor)
+            binding.authorAvatar.setOnClickListener(openAuthor)
         }
 
         /**

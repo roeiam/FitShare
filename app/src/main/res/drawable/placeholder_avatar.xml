@@ -2,5 +2,5 @@
 <!-- Shown while an avatar loads, and permanently for a user who has no photo. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="?attr/colorSurfaceVariant" />
+    <solid android:color="@color/placeholder_fill" />
 </shape>

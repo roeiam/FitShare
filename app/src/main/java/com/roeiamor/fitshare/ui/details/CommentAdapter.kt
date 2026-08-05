@@ -1,6 +1,7 @@
 package com.roeiamor.fitshare.ui.details
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -22,10 +23,13 @@ import com.roeiamor.fitshare.util.loadAvatar
  * @param currentUserId used to decide which rows offer deletion; null when signed out.
  * @param onDeleteRequested invoked on a long press of the user's own comment. The Fragment shows the
  *   confirmation dialog, because a dialog needs a Fragment.
+ * @param onAuthorClick invoked with the author's uid when their name or avatar is tapped, so the
+ *   Fragment can open that user's profile.
  */
 class CommentAdapter(
     private val currentUserId: String?,
-    private val onDeleteRequested: (Comment) -> Unit
+    private val onDeleteRequested: (Comment) -> Unit,
+    private val onAuthorClick: (String) -> Unit
 ) : ListAdapter<Comment, CommentAdapter.CommentViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CommentViewHolder {
@@ -34,7 +38,7 @@ class CommentAdapter(
             parent,
             false
         )
-        return CommentViewHolder(binding, currentUserId, onDeleteRequested)
+        return CommentViewHolder(binding, currentUserId, onDeleteRequested, onAuthorClick)
     }
 
     override fun onBindViewHolder(holder: CommentViewHolder, position: Int) {
@@ -45,7 +49,8 @@ class CommentAdapter(
     class CommentViewHolder(
         private val binding: ItemCommentBinding,
         private val currentUserId: String?,
-        private val onDeleteRequested: (Comment) -> Unit
+        private val onDeleteRequested: (Comment) -> Unit,
+        private val onAuthorClick: (String) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         /** Fills the row. Every property is set unconditionally, because views are recycled. */
@@ -56,6 +61,13 @@ class CommentAdapter(
             binding.commentAvatar.loadAvatar(comment.authorPhotoUrl)
             binding.commentText.text = comment.text
             binding.commentTime.text = formatCreatedAt(comment)
+
+            // The name and the avatar open that user's profile. The whole row is not clickable,
+            // because the row's gesture is the long press that deletes it - a tap anywhere opening a
+            // profile would make an accidental brush against a comment navigate away.
+            val openAuthor = View.OnClickListener { onAuthorClick(comment.authorId) }
+            binding.commentAuthor.setOnClickListener(openAuthor)
+            binding.commentAvatar.setOnClickListener(openAuthor)
 
             // Long press deletes, but only your own comment. Setting the listener to null on other
             // people's rows also clears the one a recycled view may still be carrying.

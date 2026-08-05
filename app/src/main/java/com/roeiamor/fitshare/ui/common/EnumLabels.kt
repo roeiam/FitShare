@@ -3,6 +3,7 @@ package com.roeiamor.fitshare.ui.common
 import androidx.annotation.StringRes
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Difficulty
+import com.roeiamor.fitshare.data.model.FeedSort
 import com.roeiamor.fitshare.data.model.WorkoutCategory
 
 /**
@@ -24,6 +25,13 @@ fun WorkoutCategory.labelRes(): Int = when (this) {
     WorkoutCategory.SWIMMING -> R.string.category_swimming
     WorkoutCategory.CROSSFIT -> R.string.category_crossfit
     WorkoutCategory.OTHER -> R.string.category_other
+}
+
+/** The Hebrew label for a feed ordering. */
+@StringRes
+fun FeedSort.labelRes(): Int = when (this) {
+    FeedSort.NEWEST -> R.string.feed_sort_newest
+    FeedSort.MOST_LIKED -> R.string.feed_sort_most_liked
 }
 
 /** The Hebrew label for a difficulty level. */

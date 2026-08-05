@@ -15,9 +15,14 @@ import com.roeiamor.fitshare.data.repository.AuthRepository
 import com.roeiamor.fitshare.data.repository.AuthRepositoryImpl
 import com.roeiamor.fitshare.data.repository.InteractionRepository
 import com.roeiamor.fitshare.data.repository.InteractionRepositoryImpl
+import com.roeiamor.fitshare.data.repository.UserRepository
+import com.roeiamor.fitshare.data.repository.UserRepositoryImpl
 import com.roeiamor.fitshare.data.repository.WorkoutRepository
 import com.roeiamor.fitshare.data.repository.WorkoutRepositoryImpl
 import com.roeiamor.fitshare.util.ImageCompressor
+import com.roeiamor.fitshare.util.NetworkGuard
+import com.roeiamor.fitshare.util.NetworkMonitor
+import com.roeiamor.fitshare.util.ThemePreferences
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -103,28 +108,50 @@ object ServiceLocator {
         CloudinaryImageUploader(cloudinaryApi, imageCompressor)
     }
 
+    // ---- Platform ----------------------------------------------------------------------------
+
+    /** Watches connectivity: drives the offline banner and lets [networkGuard] fail fast. */
+    val networkMonitor: NetworkMonitor by lazy { NetworkMonitor(requireContext()) }
+
+    /** Wraps every network-bound repository call in a connectivity check and a timeout. */
+    private val networkGuard: NetworkGuard by lazy { NetworkGuard(networkMonitor) }
+
+    /** The stored light/dark choice. Read once at startup by FitShareApp. */
+    val themePreferences: ThemePreferences by lazy { ThemePreferences(requireContext()) }
+
     // ---- Repositories ----------------------------------------------------------------------
 
     /** Accounts and sessions. Exposed as the interface so callers cannot reach Firebase through it. */
     val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(authDataSource, userDataSource)
+        AuthRepositoryImpl(authDataSource, userDataSource, networkGuard)
     }
 
     // ---- ViewModels ------------------------------------------------------------------------
 
     /** Reading and publishing workouts. Exposed as the interface, never the implementation. */
     val workoutRepository: WorkoutRepository by lazy {
-        WorkoutRepositoryImpl(workoutDataSource, userDataSource, authDataSource, imageUploader)
+        WorkoutRepositoryImpl(
+            workoutDataSource, userDataSource, authDataSource, imageUploader, networkGuard
+        )
     }
 
     /** Likes, comments and favourites for the signed-in user. */
     val interactionRepository: InteractionRepository by lazy {
-        InteractionRepositoryImpl(interactionDataSource, userDataSource, authDataSource)
+        InteractionRepositoryImpl(
+            interactionDataSource, userDataSource, authDataSource, networkGuard
+        )
+    }
+
+    /** Profiles: reading one, and editing your own. */
+    val userRepository: UserRepository by lazy {
+        UserRepositoryImpl(
+            userDataSource, workoutDataSource, authDataSource, imageUploader, networkGuard
+        )
     }
 
     /** The factory for screens that need no arguments. */
     val viewModelFactory: ViewModelFactory by lazy {
-        ViewModelFactory(authRepository, workoutRepository, interactionRepository)
+        ViewModelFactory(authRepository, workoutRepository, interactionRepository, userRepository)
     }
 
     /**
@@ -134,8 +161,10 @@ object ServiceLocator {
      * Not a `by lazy` singleton like the one above, because the argument differs per screen. Built
      * fresh each time, which is cheap: a factory holds references, not state.
      */
-    fun viewModelFactory(workoutId: String?): ViewModelFactory =
-        ViewModelFactory(authRepository, workoutRepository, interactionRepository, workoutId)
+    fun viewModelFactory(screenArgument: String?): ViewModelFactory =
+        ViewModelFactory(
+            authRepository, workoutRepository, interactionRepository, userRepository, screenArgument
+        )
 
     // ---- Lifecycle -------------------------------------------------------------------------
 

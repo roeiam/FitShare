@@ -369,6 +369,46 @@ repository calls in `withTimeout`, so a call that cannot complete becomes a real
 
 **Deliberately not fixed in Phase 5** — recorded here so it is not lost.
 
+**RESOLVED in Phase 7 — and the first fix was not enough.** `withTimeout` stopped the hang, but
+device testing showed it made the app *lie*: offline, publishing reported `אין חיבור לאינטרנט` and
+then committed the workout anyway once wifi returned, because Firestore had queued the batch locally.
+`util/NetworkGuard.kt` now refuses to start a call when `NetworkMonitor` reports no validated
+connection, so nothing is handed to the SDK and nothing can land later; the timeout remains as the
+backstop for a connection that dies mid-call. Verified on the Samsung: a workout published offline
+never appeared after reconnecting.
+
+---
+
+## Phase 7 — profile, favourites, theme, connectivity
+
+Built: `ProfileFragment` (avatar, name, bio, three stats, workout grid, read-only mode for another
+user), `EditProfileFragment`, `FavoritesFragment`, `ThemePreferences`, the no-connection banner, and
+feed sorting. Full detail in `PHASE7_REPORT.md`.
+
+New: `data/repository/UserRepository.kt`, `ui/profile/{ProfileUiState,EditProfileViewModel,
+WorkoutGridAdapter}.kt`, `ui/favorites/{FavoritesViewModel,FavoriteAdapter}.kt`,
+`util/{NetworkMonitor,NetworkGuard,ThemePreferences}.kt`, and the layouts `item_workout_grid.xml`,
+`item_favorite.xml`, `view_profile_stat.xml`.
+
+All 17 MVP features are now implemented.
+
+### Still open after Phase 7
+
+1. **The display name in Firestore reads `רועי אמוX`.** Broken during verification of the
+   denormalization repair and not restorable from adb — `input text` cannot send non-ASCII on this
+   device. **Fix by hand: Profile → עריכת פרופיל → retype `רועי אמור` → שמירה.**
+2. **A second composite index is required** for category filter + most-liked sort
+   (`category` ASC, `likesCount` DESC). Without it that combination shows the error state. The
+   creation link is in `PHASE7_REPORT.md` §5.
+3. **Offline registration was never executed** — reaching the register screen needs a sign-out, and
+   signing back in needs the account password. The code path is the same guarded wrapper as the five
+   paths that were tested and passed, but it is not verified by execution.
+4. **`RoeiTester.workoutsCount` is 1 while they have 2 workouts** — those documents were typed into
+   the Firebase console in Phase 4, which bypasses the batch that maintains the counter. Set it to 2
+   in the console.
+5. **A rename does not repair comment author names**, only workout author names. Both carry the same
+   denormalized fields. Fixing it needs a collection-group query over `comments`.
+
 ---
 
 ## For the README — known difficulties
@@ -387,3 +427,11 @@ These are the things that cost real time and are worth writing up:
    `compileSdk 37`. Resolved by pinning `core-ktx` and `glide` rather than chasing a new SDK.
 5. **A brand colour that reads as accessible was not** (Phase 3): `mint_on_light` measures 3.1:1 as
    text on the light background. Caught by measuring, not by looking.
+6. **A timeout is not enough to make an offline failure honest** (Phase 7). Firestore queues plain
+   writes and batches locally, so the UI can report failure and the write still lands minutes later.
+   Transactions do not queue, which is why likes and comments behaved correctly and publishing did
+   not. The app now refuses to start a write with no connection.
+7. **A second light-theme contrast defect, again only visible in a screenshot** (Phase 7): both image
+   placeholders used `?attr/colorSurfaceVariant`, which resolves to the same colour as the light
+   background — so a workout with no photo was invisible. Fixed with a dedicated
+   `@color/placeholder_fill` and a `values-night` override.

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Favorites. Phase 7 fills the content container with the saved-workouts list.
+    Favorites: the workouts the signed-in user has saved.
 
     The four states from SPEC section 5 live here: the content container plus the three shared
     state layouts, included rather than copied. ui/common/StateRenderer decides which one shows.
+
+    One RecyclerView and nothing else - the whole screen comes from a single query, because a
+    favourite is stored as a denormalized snapshot rather than a pointer (SPEC section 3).
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -20,9 +24,20 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingStart="@dimen/screen_padding_horizontal"
-            android:paddingEnd="@dimen/screen_padding_horizontal"
-            android:visibility="gone" />
+            android:visibility="gone">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/favoritesList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/screen_padding_horizontal"
+                android:paddingTop="@dimen/space_md"
+                android:paddingEnd="@dimen/screen_padding_horizontal"
+                tools:itemCount="4"
+                tools:listitem="@layout/item_favorite" />
+
+        </LinearLayout>
 
         <include
             android:id="@+id/stateLoading"

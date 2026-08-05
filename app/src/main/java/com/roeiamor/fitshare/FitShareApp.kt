@@ -1,12 +1,11 @@
 package com.roeiamor.fitshare
 
 import android.app.Application
-import androidx.appcompat.app.AppCompatDelegate
 import com.roeiamor.fitshare.di.ServiceLocator
 
 /**
  * The application entry point. Runs once, before any Activity, and does two things:
- * wires up the [ServiceLocator] and selects the dark theme.
+ * wires up the [ServiceLocator] and applies the stored theme.
  *
  * The Hebrew locale is *not* forced here. See [MainActivity.forceHebrewLocale] for why it cannot be.
  */
@@ -15,18 +14,21 @@ class FitShareApp : Application() {
     override fun onCreate() {
         super.onCreate()
         ServiceLocator.init(this)
-        applyDefaultDarkTheme()
+        applyStoredTheme()
     }
 
     /**
-     * Makes dark the default look, as the mockups in SPEC section 7 are drawn (values-night).
-     * Without this the theme would follow the device, and every screen built from Phase 2 onwards
-     * would be tuned against whichever mode the developer's phone happened to be in.
+     * Applies the user's stored light/dark choice, defaulting to dark.
      *
-     * This is only the *default*. From Phase 7, ThemePreferences reads the user's stored choice and
-     * calls setDefaultNightMode again with it, overriding this line. Light mode stays fully usable.
+     * Dark is the default because the mockups in SPEC section 7 are drawn that way (values-night);
+     * following the device instead would mean every screen had been tuned against whichever mode the
+     * developer's phone happened to be in. The toggle on the profile screen overwrites the stored
+     * value, and this line is what makes that choice survive a restart.
+     *
+     * Safe in `Application.onCreate`, unlike `setApplicationLocales` - see
+     * [MainActivity.forceHebrewLocale] for why that one is not.
      */
-    private fun applyDefaultDarkTheme() {
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+    private fun applyStoredTheme() {
+        ServiceLocator.themePreferences.applyToApp()
     }
 }

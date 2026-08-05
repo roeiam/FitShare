@@ -34,7 +34,12 @@
     <dimen name="like_count_min_width">24dp</dimen>
     <dimen name="hero_image_height">240dp</dimen>
     <dimen name="comment_avatar_size">32dp</dimen>
+    <dimen name="favorite_thumb_size">72dp</dimen>
     <dimen name="elevation_card">0dp</dimen>
+
+    <!-- Profile: the workout grid and the three-statistic row -->
+    <dimen name="grid_item_gap">8dp</dimen>
+    <dimen name="profile_bio_max_height">96dp</dimen>
 
     <!-- Text sizes (SPEC section 7) -->
     <dimen name="text_headline">22sp</dimen>

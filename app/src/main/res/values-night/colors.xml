@@ -11,4 +11,8 @@
     -->
     <color name="link_text">#FF5FE3A1</color>
 
+
+    <!-- Placeholder fill, dark theme: the elevated navy, clearly above @color/ink. -->
+    <color name="placeholder_fill">#FF223150</color>
+
 </resources>

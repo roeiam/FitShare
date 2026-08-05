@@ -57,6 +57,37 @@
 
     </HorizontalScrollView>
 
+    <!--
+        Sort, as its own row. Kept separate from the category chips above because the two answer
+        different questions - "which workouts" and "in what order" - and one row mixing both would
+        make a chip's meaning depend on where it happens to sit.
+    -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/screen_padding_horizontal"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingEnd="@dimen/screen_padding_horizontal">
+
+        <TextView
+            style="@style/TextAppearance.FitShare.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/space_sm"
+            android:text="@string/profile_sort" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/sortChips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="true"
+            app:singleLine="true"
+            app:singleSelection="true" />
+
+    </LinearLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"

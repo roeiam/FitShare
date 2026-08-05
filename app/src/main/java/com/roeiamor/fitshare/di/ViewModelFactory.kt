@@ -4,13 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.roeiamor.fitshare.data.repository.AuthRepository
 import com.roeiamor.fitshare.data.repository.InteractionRepository
+import com.roeiamor.fitshare.data.repository.UserRepository
 import com.roeiamor.fitshare.data.repository.WorkoutRepository
 import com.roeiamor.fitshare.ui.addworkout.AddWorkoutViewModel
 import com.roeiamor.fitshare.ui.auth.ForgotPasswordViewModel
 import com.roeiamor.fitshare.ui.auth.LoginViewModel
 import com.roeiamor.fitshare.ui.auth.RegisterViewModel
 import com.roeiamor.fitshare.ui.details.WorkoutDetailsViewModel
+import com.roeiamor.fitshare.ui.favorites.FavoritesViewModel
 import com.roeiamor.fitshare.ui.feed.FeedViewModel
+import com.roeiamor.fitshare.ui.profile.EditProfileViewModel
 import com.roeiamor.fitshare.ui.profile.ProfileViewModel
 
 /**
@@ -26,19 +29,24 @@ import com.roeiamor.fitshare.ui.profile.ProfileViewModel
  * @param authRepository accounts and sessions; used by the three auth screens.
  * @param workoutRepository reading and writing workouts.
  * @param interactionRepository likes, comments and favourites.
+ * @param userRepository profiles: reading one, and editing your own.
  */
 class ViewModelFactory(
     private val authRepository: AuthRepository,
     private val workoutRepository: WorkoutRepository,
     private val interactionRepository: InteractionRepository,
+    private val userRepository: UserRepository,
     /**
-     * Screen arguments the factory cannot know by itself.
+     * The id of whatever the screen is *about*, which the factory cannot know by itself.
      *
-     * A ViewModel that needs the id of the thing it is showing - the details screen, the add form in
-     * edit mode - gets it here rather than reading `SavedStateHandle`. Passing it explicitly keeps
-     * the dependency visible in this one file, which is the whole point of a hand-written factory.
+     * A workout id for the details screen and for the add form in edit mode; a user id for a
+     * profile. One parameter rather than one per screen, because each ViewModel needs exactly one
+     * and the `when` below says plainly which is which.
+     *
+     * Passed explicitly rather than read from a `SavedStateHandle` so the dependency stays visible
+     * in this one file, which is the whole point of a hand-written factory.
      */
-    private val workoutId: String? = null
+    private val screenArgument: String? = null
 ) : ViewModelProvider.Factory {
 
     /**
@@ -57,17 +65,29 @@ class ViewModelFactory(
                 ForgotPasswordViewModel(authRepository)
 
             modelClass.isAssignableFrom(ProfileViewModel::class.java) ->
-                ProfileViewModel(authRepository)
+                ProfileViewModel(
+                    // Null means "my own profile", which is what the bottom-navigation tab passes.
+                    profileUserId = screenArgument,
+                    authRepository = authRepository,
+                    userRepository = userRepository,
+                    interactionRepository = interactionRepository
+                )
+
+            modelClass.isAssignableFrom(EditProfileViewModel::class.java) ->
+                EditProfileViewModel(userRepository)
+
+            modelClass.isAssignableFrom(FavoritesViewModel::class.java) ->
+                FavoritesViewModel(interactionRepository)
 
             modelClass.isAssignableFrom(FeedViewModel::class.java) ->
                 FeedViewModel(workoutRepository)
 
             modelClass.isAssignableFrom(AddWorkoutViewModel::class.java) ->
-                AddWorkoutViewModel(workoutRepository, workoutId)
+                AddWorkoutViewModel(workoutRepository, screenArgument)
 
             modelClass.isAssignableFrom(WorkoutDetailsViewModel::class.java) ->
                 WorkoutDetailsViewModel(
-                    workoutId = requireNotNull(workoutId) {
+                    workoutId = requireNotNull(screenArgument) {
                         "WorkoutDetailsViewModel needs a workoutId; use " +
                             "ServiceLocator.viewModelFactory(workoutId)"
                     },

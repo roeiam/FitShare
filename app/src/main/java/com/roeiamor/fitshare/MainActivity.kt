@@ -15,18 +15,23 @@ import androidx.core.view.isGone
 import androidx.core.view.updatePadding
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.ui.setupWithNavController
 import com.roeiamor.fitshare.databinding.ActivityMainBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.util.hideKeyboard
 import com.roeiamor.fitshare.util.requestVisibleAboveKeyboard
+import kotlinx.coroutines.launch
 
 /**
  * The only Activity in the app. It hosts the navigation graph and the bottom navigation bar and
  * does nothing else - every screen is a Fragment (SPEC section 5).
  *
- * Its three jobs: choose the start destination from the current session, keep the bottom bar in
- * sync with navigation, and hide that bar on the authentication screens.
+ * Its jobs: choose the start destination from the current session, keep the bottom bar in sync with
+ * navigation, hide that bar on the authentication screens, and show the no-connection banner.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -57,6 +62,28 @@ class MainActivity : AppCompatActivity() {
 
         applySystemBarInsets()
         setUpNavigation()
+        observeConnectivity()
+    }
+
+    /**
+     * Shows the banner whenever the device has no usable internet (SPEC section 6).
+     *
+     * On the Activity rather than on each screen, because connectivity belongs to the device, not to
+     * whichever fragment happens to be showing - so every screen inherits it and a new screen cannot
+     * forget it.
+     *
+     * `repeatOnLifecycle(STARTED)` is what stops the `NetworkCallback` from staying registered while
+     * the app is in the background: collection is cancelled on stop and restarted on start, and
+     * cancelling the flow unregisters the callback through its `awaitClose`.
+     */
+    private fun observeConnectivity() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                ServiceLocator.networkMonitor.observe().collect { isOnline ->
+                    binding.offlineBanner.isVisible = !isOnline
+                }
+            }
+        }
     }
 
     /**

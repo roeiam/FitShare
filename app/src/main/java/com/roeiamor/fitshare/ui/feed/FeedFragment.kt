@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.roeiamor.fitshare.R
 import com.roeiamor.fitshare.data.model.Workout
+import com.roeiamor.fitshare.data.model.FeedSort
 import com.roeiamor.fitshare.data.model.WorkoutCategory
 import com.roeiamor.fitshare.databinding.FragmentFeedBinding
 import com.roeiamor.fitshare.di.ServiceLocator
@@ -46,6 +47,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
 
         setUpList()
         setUpCategoryChips()
+        setUpSortChips()
         setUpSearch()
         setUpRefresh()
 
@@ -60,7 +62,10 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
     }
 
     private fun setUpList() {
-        workoutAdapter = WorkoutAdapter(onWorkoutClick = ::openDetails)
+        workoutAdapter = WorkoutAdapter(
+            onWorkoutClick = ::openDetails,
+            onAuthorClick = ::openProfile
+        )
         binding.content.adapter = workoutAdapter
         binding.content.setHasFixedSize(true)
 
@@ -91,6 +96,24 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
             // -1 selects the leading chip, so the feed opens unfiltered.
             checkedIndex = -1,
             onSelected = { index -> viewModel.onCategorySelected(WorkoutCategory.entries.getOrNull(index)) }
+        )
+    }
+
+    /**
+     * Builds the sort row from [FeedSort], through the same helper and the same label mapping as the
+     * category row - so adding an ordering means adding an enum constant and a string, nothing else.
+     */
+    private fun setUpSortChips() {
+        ChipBuilder.buildSingleSelection(
+            group = binding.sortChips,
+            baseId = CHIP_ID_SORT,
+            leadingLabelRes = null,
+            entryLabels = FeedSort.entries.map { it.labelRes() },
+            // 0 is NEWEST, which is how the feed opens.
+            checkedIndex = 0,
+            onSelected = { index ->
+                FeedSort.entries.getOrNull(index)?.let { viewModel.onSortSelected(it) }
+            }
         )
     }
 
@@ -150,6 +173,11 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
         }
     }
 
+    /** Opens a user's profile, read-only. */
+    private fun openProfile(userId: String) {
+        findNavController().navigate(FeedFragmentDirections.actionFeedToProfile(userId))
+    }
+
     private fun openDetails(workout: Workout) {
         findNavController().navigate(
             FeedFragmentDirections.actionFeedToWorkoutDetails(workoutId = workout.id)
@@ -163,5 +191,11 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>() {
          * chip survives a configuration change.
          */
         const val CHIP_ID_ALL = 1000
+
+        /**
+         * The sort chips get their own id range, far enough from the category chips that the two
+         * groups can never collide however many categories are added.
+         */
+        const val CHIP_ID_SORT = 2000
     }
 }
