@@ -11,7 +11,6 @@ import androidx.navigation.fragment.findNavController
 import com.roeiamor.fitshare.databinding.FragmentRegisterBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
-import com.roeiamor.fitshare.util.onImeDone
 import com.roeiamor.fitshare.util.setErrorRes
 import com.roeiamor.fitshare.util.showSnackbar
 
@@ -43,7 +42,7 @@ class RegisterFragment : BaseFragment<FragmentRegisterBinding>() {
             viewModel.onConfirmationChanged(it?.toString().orEmpty())
         }
 
-        binding.confirmationInput.onImeDone { viewModel.onSubmit() }
+        // The Done key on the last field only closes the keyboard; registering needs the button.
 
         binding.registerSubmit.setOnClickListener { viewModel.onSubmit() }
         binding.backToLogin.setOnClickListener { findNavController().navigateUp() }

@@ -35,19 +35,30 @@ object FormKeyboardSupport {
     /** Walks [root] once and applies the shared behaviour to every text field it contains. */
     fun apply(root: View) {
         forEachEditText(root) { editText ->
-            addDoneIconIfMultiline(editText)
+            addDoneIconIfNeeded(editText)
             scrollIntoViewOnFocus(editText)
         }
     }
 
     /**
-     * Gives a multi-line field a "done" end icon on its [TextInputLayout].
+     * Gives a field a "done" end icon on its [TextInputLayout] when its keyboard has no usable
+     * action key of its own.
      *
-     * Single-line fields already have an IME action key - [EditorInfo.IME_ACTION_NEXT] or
-     * [EditorInfo.IME_ACTION_DONE] - so they are left alone; adding an icon there would be clutter.
+     * Two kinds of field need it:
+     *
+     *  - **Multi-line.** Enter inserts a newline there, which is correct, so the IME shows no action
+     *    key at all.
+     *  - **Numeric.** This one was measured rather than assumed. The duration field declares
+     *    `IME_ACTION_DONE` and the IME receives it - `imeOptions=0x…006` in the input-method dump -
+     *    but Samsung's keyboard renders a plain ↵ for a number field and tapping it performs no
+     *    action whatsoever, so there is no way to close the keyboard from the key that looks like it
+     *    should. An icon that always works beats an action key that works on some devices.
+     *
+     * Ordinary single-line text fields are left alone: their Next and Done keys behave, and an extra
+     * icon there would be clutter.
      */
-    private fun addDoneIconIfMultiline(editText: EditText) {
-        if (!editText.isMultiline()) return
+    private fun addDoneIconIfNeeded(editText: EditText) {
+        if (!editText.isMultiline() && !editText.isNumeric()) return
 
         val layout = editText.parentTextInputLayout() ?: return
         // Do not fight a field that already asked for a specific end icon, such as a password toggle.
@@ -80,6 +91,10 @@ object FormKeyboardSupport {
     /** True when Enter inserts a newline rather than triggering an IME action. */
     private fun EditText.isMultiline(): Boolean =
         inputType and android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE != 0
+
+    /** True for a number pad, whose action key is not dependable across IMEs - see above. */
+    private fun EditText.isNumeric(): Boolean =
+        inputType and android.text.InputType.TYPE_MASK_CLASS == android.text.InputType.TYPE_CLASS_NUMBER
 
     /** The TextInputLayout wrapping this field, if it has one. */
     private fun EditText.parentTextInputLayout(): TextInputLayout? {

@@ -26,7 +26,6 @@ import com.roeiamor.fitshare.ui.common.BaseFragment
 import com.roeiamor.fitshare.ui.common.ChipBuilder
 import com.roeiamor.fitshare.ui.common.labelRes
 import com.roeiamor.fitshare.util.loadWorkoutImage
-import com.roeiamor.fitshare.util.onImeDone
 import com.roeiamor.fitshare.util.showSnackbar
 
 /**
@@ -164,8 +163,9 @@ class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
             viewModel.onDurationChanged(it?.toString().orEmpty())
         }
 
-        // Duration is the last field, so Done there publishes. onPublish ignores an invalid form.
-        binding.durationInput.onImeDone { viewModel.onPublish() }
+        // Duration is the last field, and its Done key only dismisses the keyboard. It deliberately
+        // does not publish: a number is the last thing typed here, and finishing it is not the same
+        // as deciding the whole workout is ready to go out.
 
         binding.choosePhoto.setOnClickListener { showImageSourcePicker() }
         binding.workoutImage.setOnClickListener { showImageSourcePicker() }

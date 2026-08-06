@@ -209,6 +209,7 @@
     <string name="cd_like">לייק</string>
     <string name="cd_like_remove">ביטול לייק</string>
     <string name="cd_comments">תגובות</string>
+    <string name="cd_delete_comment">מחיקת התגובה</string>
     <string name="cd_favorite">שמירה למועדפים</string>
     <string name="cd_share">שיתוף</string>
     <string name="cd_back">חזרה</string>

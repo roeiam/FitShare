@@ -3,6 +3,7 @@ package com.roeiamor.fitshare.ui.details
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -19,8 +20,8 @@ import com.roeiamor.fitshare.util.loadAvatar
  * throw away the scroll position each time anybody posted anything.
  *
  * @param currentUserId used to decide which rows offer deletion; null when signed out.
- * @param onDeleteRequested invoked on a long press of the user's own comment. The Fragment shows the
- *   confirmation dialog, because a dialog needs a Fragment.
+ * @param onDeleteRequested invoked from the trash button, which appears only on the user's own
+ *   comments. The Fragment shows the confirmation dialog, because a dialog needs a Fragment.
  * @param onAuthorClick invoked with the author's uid when their name or avatar is tapped, so the
  *   Fragment can open that user's profile.
  */
@@ -58,20 +59,25 @@ class CommentAdapter(
             binding.commentText.text = comment.text
             binding.commentTime.text = binding.root.context.workoutTimeText(comment.createdAt)
 
-            // The name and the avatar open that user's profile. The whole row is not clickable,
-            // because the row's gesture is the long press that deletes it - a tap anywhere opening a
-            // profile would make an accidental brush against a comment navigate away.
+            // The name and the avatar open that user's profile - not the whole row. A comment is a
+            // block of text people scroll past and brush against; making all of it a navigation
+            // target would send them somewhere they did not ask to go.
             val openAuthor = View.OnClickListener { onAuthorClick(comment.authorId) }
             binding.commentAuthor.setOnClickListener(openAuthor)
             binding.commentAvatar.setOnClickListener(openAuthor)
 
-            // Long press deletes, but only your own comment. Setting the listener to null on other
-            // people's rows also clears the one a recycled view may still be carrying.
+            // Deleting is a visible button, and only on your own comment. It used to be a long
+            // press, which nothing on the row advertised - a gesture a user has to already know
+            // about is not a feature they have.
+            //
+            // Both the visibility and the listener are set unconditionally, because views are
+            // recycled: a row that only *added* the button and its listener would hand somebody
+            // else's comment a delete control inherited from the row before it.
             val isMine = currentUserId != null && currentUserId == comment.authorId
-            binding.root.isLongClickable = isMine
-            binding.root.setOnLongClickListener(
+            binding.commentDelete.isVisible = isMine
+            binding.commentDelete.setOnClickListener(
                 if (isMine) {
-                    { onDeleteRequested(comment); true }
+                    View.OnClickListener { onDeleteRequested(comment) }
                 } else {
                     null
                 }

@@ -3,12 +3,14 @@
     One comment: avatar, author, relative time, text.
 
     RTL: every constraint uses Start/End, so the avatar sits on the right under Hebrew and the text
-    flows away from it without any mirroring work.
+    flows away from it without any mirroring work - and the delete button lands on the left, which is
+    the trailing edge in Hebrew.
 
-    The background is the touch ripple, not a colour: long-pressing your own comment offers to delete
-    it, and a row that gives no feedback under the finger reads as unresponsive. Lint's Overdraw
-    check assumes a root background is opaque and hides the theme's; a ripple is transparent until
-    touched, so there is nothing to hide - hence the suppression below.
+    Deleting used to be a long press, which is invisible: nothing on the row suggested it and no user
+    would guess it. It is a visible trash button now, shown only on your own comments. The row keeps
+    its ripple because it is still touchable, and Lint's Overdraw check assumes a root background is
+    opaque and hides the theme's - a ripple is transparent until touched, so there is nothing to
+    hide, hence the suppression below.
 -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -53,8 +55,33 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/space_sm"
         app:layout_constraintBaseline_toBaselineOf="@id/commentAuthor"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/commentDelete"
+        app:layout_goneMarginEnd="0dp"
         tools:text="לפני 5 דקות" />
+
+    <!--
+        Visible only on the signed-in user's own comments; CommentAdapter decides.
+
+        A 48dp touch target with a 24dp icon inside it, so the tappable area meets the minimum
+        without the trash mark itself looming over a one-line comment. The time and the text both
+        end where this begins, so it never overlaps them - and both carry a goneMarginEnd, so on
+        somebody else's comment, where this is absent, they take the full width back instead of
+        leaving a 48dp hole.
+    -->
+    <ImageButton
+        android:id="@+id/commentDelete"
+        android:layout_width="@dimen/touch_target_min"
+        android:layout_height="@dimen/touch_target_min"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cd_delete_comment"
+        android:padding="@dimen/space_md"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_delete"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
 
     <TextView
         android:id="@+id/commentText"
@@ -63,9 +90,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/space_sm"
         android:layout_marginTop="@dimen/space_xs"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/commentDelete"
         app:layout_constraintStart_toEndOf="@id/commentAvatar"
         app:layout_constraintTop_toBottomOf="@id/commentAuthor"
+        app:layout_goneMarginEnd="0dp"
         tools:text="אימון מעולה, תודה על השיתוף" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

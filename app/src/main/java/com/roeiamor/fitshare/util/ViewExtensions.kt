@@ -2,7 +2,6 @@ package com.roeiamor.fitshare.util
 
 import android.graphics.Rect
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
@@ -74,21 +73,18 @@ fun View.requestVisibleAboveKeyboard() {
 /** Breathing room between the focused field and the top of the keyboard. */
 private const val KEYBOARD_CLEARANCE_PX = 96
 
-/**
- * Runs [action] when the user presses the keyboard's Done key on this field.
+/*
+ * There is deliberately no `onImeDone` helper here any more.
  *
- * Lets the last field in a form submit it, rather than only closing the keyboard and leaving the
- * user to find the button. Returns false so the IME still performs its normal dismissal.
+ * It used to let the last field in a form submit it from the keyboard's Done key. On the add-workout
+ * form that made the duration field - which happens to be last - publish the workout the moment the
+ * user finished typing a number, with no confirming tap and no chance to review the rest of the
+ * form. Nothing in this app is submitted by a keyboard action key now: publishing, registering,
+ * signing in and posting a comment all need a deliberate press on their own button.
  *
- * @param action usually the same call the submit button makes; it is expected to ignore an invalid
- *   form itself, so this does not need to check.
+ * The Done key still does what a Done key should - it dismisses the keyboard - because that is the
+ * IME's own default behaviour once nothing intercepts the action.
  */
-fun EditText.onImeDone(action: () -> Unit) {
-    setOnEditorActionListener { _, actionId, _ ->
-        if (actionId == EditorInfo.IME_ACTION_DONE) action()
-        false
-    }
-}
 
 /**
  * Loads a workout photo, or shows the placeholder when there is none.

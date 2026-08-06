@@ -196,6 +196,7 @@
     <string name="cd_like">Like</string>
     <string name="cd_like_remove">Remove like</string>
     <string name="cd_comments">Comments</string>
+    <string name="cd_delete_comment">Delete this comment</string>
     <string name="cd_favorite">Save to favorites</string>
     <string name="cd_share">Share</string>
     <string name="cd_back">Back</string>

@@ -199,7 +199,7 @@ class WorkoutDetailsFragment : BaseFragment<FragmentWorkoutDetailsBinding>() {
 
     /**
      * The adapter is rebuilt only when the signed-in user changes, because `currentUserId` decides
-     * which rows are long-pressable and it is fixed for the life of a session.
+     * which rows show a delete button and it is fixed for the life of a session.
      */
     private fun renderComments(state: WorkoutDetailsUiState.Content) {
         if (commentAdapter == null) {

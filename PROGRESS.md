@@ -618,3 +618,84 @@ All verified on the Samsung in both themes.
    scale, so one drawable is correct at 96dp, 40dp and 32dp. `@color/placeholder_icon` aliases
    existing palette colours and has a `values-night` override; contrast was calculated, not guessed
    - **4.4:1** on the light fill, **5.3:1** on the dark one.
+
+---
+
+## Round 2 of device fixes
+
+### The offline banner — NOT REPRODUCIBLE, root cause never confirmed
+
+**Deliberately not recorded as fixed.** It was reported firing on a healthy connection, specifically
+on returning to the app. It was instrumented heavily - every `NetworkCallback` with its capability
+flags and a timestamp, a subscription sequence number stamped into each callback line, a live
+registration counter, and the Activity and `repeatOnLifecycle` lifecycle events around them - and
+then driven through **28 return cycles across three different paths**: Activity recreated, Activity
+resumed, and the process killed while backgrounded.
+
+| | Subscribes | Unregisters | Max live | `STATUS -> OFFLINE` | `VALIDATED=false` | `onLost` | Banner |
+|---|---|---|---|---|---|---|---|
+| 28 cycles, 3 paths | 29 | 30 | **1** | **0** | **0** | **0** | **0** |
+
+A separate probe polled the device's own default network every 2s across a 60-second screen-off
+period: validated on all 30 samples.
+
+**What that positively rules out.** The leading hypothesis - a callback re-registered per fragment
+view creation, accumulating, with a stale one reporting a loss on teardown - is disproved: subscribes
+equal unregisters, the live count never exceeded 1, and no line ever carried a stale subscription
+number. The callback is a **default**-network callback, not per-network. And `NET_CAPABILITY_VALIDATED`
+never once dropped.
+
+Roei then ran **ten screen-off, PIN-unlock and resume cycles** with varying waits - the one path the
+automation could not drive, because the power button locks this phone instantly - and it never
+appeared either.
+
+**So: not reproducible after the round 2 fixes, and the root cause was never confirmed.** The most
+likely explanation is that one of the other changes altered the lifecycle timing enough to close it,
+which nobody intended and nobody can prove. A timing bug that has become rare is not the same as a
+bug that is gone, and it is recorded that way on purpose. If it ever comes back, the instrumentation
+is in this file's history - `git log -p` on `NetworkMonitor.kt` - and can be restored in one paste.
+
+**No behaviour was changed for it.** The three-state `NetworkStatus`, the 1.5s show-only debounce and
+`NetworkGuard` are all exactly as they were.
+
+### The keyboard action key no longer submits anything
+
+`ViewExtensions.onImeDone` existed only to submit a form from the keyboard, and was wired to the last
+field of four screens - duration published the workout, password signed in, confirm registered, email
+sent the reset mail. **The helper and all four call sites are gone**, and the comment field's
+misleading `actionSend` with it. Nothing in the app is submitted by an action key now.
+
+Verified on the device, both by key event and by tapping the on-screen key: the form stays put and
+nothing publishes, the typed title and duration survive, and publish is enabled only when the whole
+form validates - it is greyed with the title empty and mint once it is filled.
+
+**A Samsung quirk found while testing, and measured rather than assumed:** the duration field
+declares `IME_ACTION_DONE` and the IME receives it (`inputType=0x2`, `imeOptions=0x…006` in the
+input-method dump), but if the keyboard is still in its alphabetic layout from a previous field it
+renders a plain ↵ that performs no action at all. `FormKeyboardSupport` now gives **numeric** fields
+the same "done" end icon it already gave multi-line ones, so there is always a dismissal that does
+not depend on the IME's mood. On a clean focus the numeric pad does show a proper **סיום** key, and
+that key closes the keyboard and publishes nothing.
+
+### Comment deletion is a visible button
+
+A 48dp touch target holding a 24dp trash mark at the row's trailing edge - the left, under Hebrew -
+shown only on the signed-in user's own comments. The time and the text both end where it begins and
+carry a `goneMarginEnd`, so it never crowds the text and leaves no hole on other people's rows.
+`CommentAdapter` sets the visibility **and** the listener on every bind, because a recycled row that
+only ever *added* the control would hand somebody else's comment an inherited delete button.
+
+Verified end to end on the device, in both themes: posted a comment, watched `commentsCount` go
+**1 → 2**, deleted it with the new icon, got the existing confirmation dialog, and watched the
+comment disappear from the live thread and the count go **2 → 1**. The thread is driven by a
+Firestore `snapshotListener`, so a comment vanishing from it is the server's own answer.
+
+Unchanged on purpose: the confirmation dialog, the `runTransaction` that removes the document and
+decrements the counter together, and the rule that refuses the write server-side
+(`allow delete: if signedIn() && resource.data.authorId == request.auth.uid`).
+
+**One sub-item not verified by observation:** that somebody else's comment shows no delete icon. The
+demo data currently contains exactly one comment and it belongs to the signed-in account, and
+checking the negative case would mean signing out - which cannot be undone here, since the account
+passwords are not available. The guarantee is the `isMine` branch plus the server rule. **Worth ten
+seconds from Roei with a second account before recording.**

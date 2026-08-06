@@ -295,11 +295,18 @@
             android:layout_weight="1"
             android:hint="@string/details_comment_hint">
 
+            <!--
+                No IME action. It used to declare actionSend, which promised a send key that never
+                arrived - the field is multi-line, so the IME shows Enter for a newline instead - and
+                which would have been wrong anyway: posting a comment needs the שליחה button.
+                FormKeyboardSupport gives every multi-line field a "done" end icon, so the keyboard
+                can still be dismissed from here.
+            -->
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/commentInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:imeOptions="actionSend|flagNoExtractUi"
+                android:imeOptions="flagNoExtractUi"
                 android:inputType="textCapSentences|textMultiLine"
                 android:maxLines="4" />
 

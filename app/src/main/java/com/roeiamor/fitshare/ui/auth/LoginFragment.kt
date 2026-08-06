@@ -11,7 +11,6 @@ import androidx.navigation.fragment.findNavController
 import com.roeiamor.fitshare.databinding.FragmentLoginBinding
 import com.roeiamor.fitshare.di.ServiceLocator
 import com.roeiamor.fitshare.ui.common.BaseFragment
-import com.roeiamor.fitshare.util.onImeDone
 import com.roeiamor.fitshare.util.setErrorRes
 import com.roeiamor.fitshare.util.showSnackbar
 
@@ -41,9 +40,8 @@ class LoginFragment : BaseFragment<FragmentLoginBinding>() {
             viewModel.onPasswordChanged(it?.toString().orEmpty())
         }
 
-        // The last field submits, so a user who has just typed their password does not have to
-        // dismiss the keyboard and hunt for the button.
-        binding.passwordInput.onImeDone { viewModel.onSubmit() }
+        // The password field's Done key only closes the keyboard. Signing in needs the button:
+        // no action key in this app submits anything.
 
         binding.loginSubmit.setOnClickListener { viewModel.onSubmit() }
         binding.goToRegister.setOnClickListener {
