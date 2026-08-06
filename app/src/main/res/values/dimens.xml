@@ -46,6 +46,10 @@
     <!-- Profile: the workout grid and the three-statistic row -->
     <dimen name="grid_item_gap">8dp</dimen>
     <dimen name="profile_bio_max_height">96dp</dimen>
+    <!-- A hairline, and deliberately shorter than the statistic beside it so it reads as a
+         separator inside a group rather than as a rule across the screen. -->
+    <dimen name="profile_stat_divider_width">1dp</dimen>
+    <dimen name="profile_stat_divider_height">32dp</dimen>
 
     <!-- Text sizes (SPEC section 7) -->
     <dimen name="text_headline">22sp</dimen>

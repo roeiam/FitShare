@@ -172,9 +172,7 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>() {
 
         binding.statWorkouts.statValue.text = state.user.workoutsCount.asCountLabel()
         binding.statLikes.statValue.text = state.likesReceived.asCountLabel()
-        // Null means "not knowable" - another user's favourites are private (SPEC section 10).
-        binding.statFavorites.statValue.text =
-            state.favoritesCount?.asCountLabel() ?: getString(R.string.profile_stat_unavailable)
+        bindFavoritesStat(state)
 
         binding.workoutsHeading.setText(
             if (state.isOwnProfile) {
@@ -196,6 +194,41 @@ class ProfileFragment : BaseFragment<FragmentProfileBinding>() {
         )
 
         gridAdapter.submitList(state.workouts)
+    }
+
+    /**
+     * Shows the favourites statistic on my own profile and **removes it entirely** on anyone else's.
+     *
+     * `users/{uid}/favorites` is readable only by its owner - `allow read, write: if isOwner(uid)`
+     * in `firestore.rules`, per SPEC section 10 - so on another user's profile this number does not
+     * exist to be shown. It is genuinely private, and the rule is not going to be relaxed to make a
+     * statistic prettier: it is the one place in the schema where a document is readable by exactly
+     * one person, and that is worth more than the stat.
+     *
+     * It used to render an em dash. **A placeholder that is empty for every user except me reads as
+     * broken rather than as private** - nobody looking at it concludes "this is confidential", they
+     * conclude the app failed to load something. Absence says the same thing without inviting the
+     * wrong reading.
+     *
+     * The divider goes with it. The statistics are a centred cluster separated by hairlines, so a
+     * divider left standing after its statistic disappeared would be a line with nothing on its far
+     * side - the exact "something failed to load" impression the change exists to remove. Both are
+     * set on every render rather than once, because this Fragment serves my profile and somebody
+     * else's over the same view.
+     *
+     * The branch is on [ProfileUiState.Content.isOwnProfile], not on `favoritesCount == null`, and
+     * that distinction matters. Null carries two different meanings: "not mine to read", and "mine,
+     * but the read has not landed yet or failed". Only the first justifies removing the stat. On my
+     * own profile the slot stays and shows the dash, because there the number does exist and simply
+     * is not known this instant - which is exactly what a placeholder is for.
+     */
+    private fun bindFavoritesStat(state: ProfileUiState.Content) {
+        binding.statFavorites.root.isVisible = state.isOwnProfile
+        binding.dividerLikesFavorites.isVisible = state.isOwnProfile
+        if (!state.isOwnProfile) return
+
+        binding.statFavorites.statValue.text =
+            state.favoritesCount?.asCountLabel() ?: getString(R.string.profile_stat_unavailable)
     }
 
     private fun openWorkout(workout: Workout) {

@@ -65,7 +65,22 @@
                 android:scrollbars="vertical"
                 android:textAlignment="center" />
 
-            <!-- ===== The three statistics (SPEC section 5) ===== -->
+            <!-- ===== The three statistics (SPEC section 5) =====
+
+                 A centred cluster, not a distribution across the width. The children stay
+                 wrap_content so the row is only as wide as its contents and centring keeps that
+                 block in the middle of the screen; each statistic contributes space_sm of padding
+                 per side, so neighbours sit space_lg apart.
+
+                 Weights were tried and rejected: dividing the full width put each number alone in
+                 the middle of a 360dp slot, which read as three unrelated items rather than one
+                 group of three.
+
+                 The hairline between them is what makes the grouping explicit. The second one is
+                 tied to the favourites statistic and is hidden with it on somebody else's profile
+                 (see ProfileFragment.bindFavoritesStat) - left behind, it would be a divider with
+                 nothing on its far side, which is exactly the "something is missing" reading the
+                 hiding was meant to avoid. -->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -78,9 +93,20 @@
                     android:id="@+id/statWorkouts"
                     layout="@layout/view_profile_stat" />
 
+                <View
+                    android:layout_width="@dimen/profile_stat_divider_width"
+                    android:layout_height="@dimen/profile_stat_divider_height"
+                    android:background="?attr/colorOutlineVariant" />
+
                 <include
                     android:id="@+id/statLikes"
                     layout="@layout/view_profile_stat" />
+
+                <View
+                    android:id="@+id/dividerLikesFavorites"
+                    android:layout_width="@dimen/profile_stat_divider_width"
+                    android:layout_height="@dimen/profile_stat_divider_height"
+                    android:background="?attr/colorOutlineVariant" />
 
                 <include
                     android:id="@+id/statFavorites"

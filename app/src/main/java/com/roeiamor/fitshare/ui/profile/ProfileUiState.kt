@@ -27,8 +27,10 @@ sealed interface ProfileUiState {
      *   (SPEC section 5).
      * @property favoritesCount how many workouts this user has saved, or **null** when that cannot
      *   be known. Another user's favourites are private - the security rules in SPEC section 10
-     *   allow `users/{uid}/favorites` only to its owner - so on someone else's profile the third
-     *   stat has no value to show and the screen renders a dash.
+     *   allow `users/{uid}/favorites` only to its owner - so on someone else's profile there is no
+     *   value to show at all. Null is deliberately *not* the signal the screen branches on, because
+     *   it also occurs on my own profile before the first favourites emission arrives; see
+     *   `ProfileFragment.bindFavoritesStat`, which keys off [isOwnProfile] instead.
      * @property isOwnProfile whether edit, logout and the theme toggle are offered.
      */
     data class Content(
