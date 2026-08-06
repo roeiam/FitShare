@@ -711,10 +711,21 @@ The database was populated for the demo: **5 display-only user documents**, **20
 like documents** and **35 comment documents**, on top of the 6 workouts that were already there.
 
 **No Auth accounts were created.** The five seeded people - אביאל, ליאת, סופי, קרן, שלוי - exist only
-as `users/{uid}` documents with an avatar and a name, which is all the app reads to render an author
-or a profile. Writes went in over the Firestore REST API with an OAuth token minted from a service
-account, which bypasses the rules server-side, so **`firestore.rules` was never relaxed and never
-republished** - the 200 → 403 result recorded in Phase 8 is still the state of the server.
+as `users/{uid}` documents with an avatar, a name and a bio, which is all the app reads to render an
+author or a profile. Writes went in over the Firestore REST API with an OAuth token minted from a
+service account, which bypasses the rules server-side, so **`firestore.rules` was never relaxed and
+never republished** - the 200 → 403 result recorded in Phase 8 is still the state of the server.
+
+The bios were added in a later pass, because five profiles with an empty bio looked unfinished -
+`ProfileFragment` hides the line when it is blank, so the name sat directly on top of the statistics.
+Each one is a single Hebrew line of 42 - 50 characters, gendered to its name, describing what that
+person trains and when, and deliberately a different shape of sentence from the other four so that
+five profiles opened in a row do not read as one template filled in five times. They match what each
+person actually posts: אביאל's names the lift he is chasing, ליאת's is about being outdoors, סופי's
+is about having no equipment, קרן's about training after work, שלוי's about the mix of combat sports
+and tennis. Written as a masked update on the `bio` field of exactly those five uids - Roei's three
+accounts are not named in that script and cannot be reached by it. **דני לוי's own bio is unchanged**,
+and רועי's and דנה's are still empty by their own choice.
 
 Document shapes were taken from the code rather than guessed: workouts match what
 `WorkoutDataSource.createWorkout` writes (id mirrored, author denormalized, enum **names** not Hebrew
