@@ -699,3 +699,126 @@ demo data currently contains exactly one comment and it belongs to the signed-in
 checking the negative case would mean signing out - which cannot be undone here, since the account
 passwords are not available. The guarantee is the `isMine` branch plus the server rule. **Worth ten
 seconds from Roei with a second account before recording.**
+
+**Closed by the demo seed below** - there are now 37 comments across 26 workouts and most of them
+belong to somebody else, so the negative case is on screen without signing out of anything.
+
+---
+
+## Demo data seeded
+
+The database was populated for the demo: **5 display-only user documents**, **20 workouts**, **90
+like documents** and **35 comment documents**, on top of the 6 workouts that were already there.
+
+**No Auth accounts were created.** The five seeded people - אביאל, ליאת, סופי, קרן, שלוי - exist only
+as `users/{uid}` documents with an avatar and a name, which is all the app reads to render an author
+or a profile. Writes went in over the Firestore REST API with an OAuth token minted from a service
+account, which bypasses the rules server-side, so **`firestore.rules` was never relaxed and never
+republished** - the 200 → 403 result recorded in Phase 8 is still the state of the server.
+
+Document shapes were taken from the code rather than guessed: workouts match what
+`WorkoutDataSource.createWorkout` writes (id mirrored, author denormalized, enum **names** not Hebrew
+labels), likes match `InteractionDataSource.toggleLike` (`{uid, createdAt}` at
+`workouts/{id}/likes/{uid}`), comments match the `Comment` model. Seeded document ids are derived
+deterministically from a seed string, so re-running the seeder overwrites its own documents instead
+of silently creating a second copy of everything - which would have broken the counter invariant in
+the way that is hardest to notice.
+
+### The counter invariant, verified by counting rather than by trusting
+
+A verifier lists every `likes` and `comments` subcollection document and compares the number against
+the field stored beside it. **26 of 26 workouts pass**: 92 like documents against 92 counted in
+`likesCount`, 37 comment documents against 37 in `commentsCount`. It also checks every denormalized
+`authorName` and `authorPhotoUrl` on both workouts and comments against the profile it was copied
+from - **no drift** - and that every document mirrors its own id.
+
+`workoutsCount` on `רועי אמור` said 4 against 3 workouts owned. That was **pre-existing**, and is the
+residue described in the Phase 7 list item 4: documents typed into the Firebase console bypass the
+`WriteBatch` in `createWorkout` that maintains the counter. Corrected to 3 with a masked update; the
+verifier now passes on the user documents too.
+
+**One incidental confirmation worth the video.** The feed showed a seeded workout with 4 likes where
+the verifier had recorded 3 - because the like button had been tapped from the app in between. The
+document read `likesCount: 4` against 4 like documents, so `toggleLike`'s transaction held the
+invariant against data that had been written outside the app entirely. Worth doing on camera with
+the console open.
+
+### Two facts in this file were stale and are corrected
+
+1. **The Phase 7 list item 1 says the display name reads `רועי אמוX` and must be retyped by hand.**
+   It reads `רועי אמור`, correctly, and has for some time.
+2. **`roei.test.phase3@example.com` and `dana.tester@example.com` no longer exist**, so the account
+   list in Phase 6 and item 3 of the Phase 7 list are both out of date. The three real accounts are
+   `roeiamor123@gmail.com` (רועי אמור), `roeiamor123+dani@gmail.com` (דני לוי) and
+   `roeiamor123+dana@gmail.com` (דנה כהן). The cleanup that item 4 of the Phase 7 list said would
+   happen, happened.
+
+### Still open
+
+**The category filter combined with the most-liked sort is now worth trying, and may need the second
+composite index** (`category` ASC, `likesCount` DESC) named in the Phase 7 list item 2. Until now
+every workout had 0 or 1 likes, so that combination had nothing to show and was never exercised;
+there is a real 1 - 7 spread across the feed now. Firestore prints a one-click creation link to
+Logcat the first time the query runs.
+
+---
+
+## The favourites statistic on somebody else's profile
+
+**Reported by Roei:** the third statistic showed an em dash on every profile except his own.
+
+`users/{uid}/favorites` is readable only by its owner - `allow read, write: if isOwner(uid)`, SPEC
+section 10 - so on another user's profile that number genuinely does not exist to be read.
+`ProfileViewModel` already handles this correctly and deliberately: the favourites flow is chosen
+*before* the `combine` rather than inside it, so another user's favourites are never requested and a
+permission error can never put the whole screen into its error state over one statistic.
+
+**The defect was the presentation, not the data.** A placeholder that is empty for every user except
+yourself reads as broken rather than as private - nobody looking at a dash concludes "this is
+confidential", they conclude the app failed to load something. The stat is now hidden outright on
+somebody else's profile. **The rules were not touched**, and are not going to be: `favorites` is the
+one place in the schema where a document is readable by exactly one person, and that is worth more
+than a statistic.
+
+**The branch is on `isOwnProfile`, not on `favoritesCount == null`,** and that distinction is the
+part worth explaining. Null carries two different meanings - "not mine to read", and "mine, but the
+first emission has not arrived". Only the first justifies removing the stat. On my own profile the
+slot stays and shows the dash, because there the number does exist and simply is not known this
+instant, which is exactly what a placeholder is for.
+
+### The layout took two attempts
+
+**First attempt, rejected:** the three statistics were given `layout_weight="1"` so a `GONE` child
+would drop out of the weight sum and the remaining two would re-divide the width. It worked
+mechanically - the two survivors measured exactly 540px each - and looked wrong. Each number ended up
+alone in the middle of a 360dp slot, and the row read as three unrelated items rather than one group
+of three.
+
+**What shipped:** a centred cluster. The statistics are `wrap_content` under `gravity="center"`, with
+a hairline between each pair, and the whole distance between two of them is one dimension -
+`profile_stat_gap`. That dimension is the *width of the divider View*, and the line is drawn centred
+inside it by `drawable/divider_stat.xml`; the statistics themselves carry no horizontal padding. The
+point of doing it that way is that the number means exactly what its name says and can be tuned on
+its own, without touching the shared spacing scale or hunting for a second attribute that also
+contributes. The divider colour is `?attr/colorOutlineVariant`, already mapped in both themes.
+
+The divider that belongs to the favourites statistic is hidden with it. Left standing it would be a
+line with nothing on its far side - the exact "something failed to load" impression the change exists
+to remove.
+
+### Verified on the Samsung, all four cases
+
+Measured off the view hierarchy rather than judged by eye, in both themes, on my own profile and on a
+seeded user's:
+
+| | cluster | centre | dividers |
+|---|---|---|---|
+| own profile (3 stats) | x 283 - 796 | 539.5 | 2 |
+| another user (2 stats) | x 389 - 691 | 540 | 1 |
+
+Screen centre is 540, so the cluster is centred in both cases and the two-statistic version reads as
+a balanced pair rather than as three with one missing. Both gaps measure 84px, which on this device -
+420dpi, density 2.625 - is **exactly 32dp**. `statFavorites` and `dividerLikesFavorites` are absent
+from the hierarchy on another user's profile, not merely blank.
+
+`README.md` section 8's security table said the statistic shows `—`; it now says it is hidden.

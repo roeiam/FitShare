@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The hairline between two profile statistics.
+
+    The line is drawn centred inside whatever width the View is given, rather than the View being
+    the line. That is what lets `profile_stat_gap` mean exactly what its name says: the divider View
+    *is* the gap, so the distance between two statistics is that one dimension and nothing else adds
+    to it. A 1dp View with margins either side would have split the gap across two attributes and
+    made the number half of what it appears to be.
+
+    `android:width` and `android:gravity` on a layer-list item need API 23; minSdk here is 24.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:width="@dimen/profile_stat_divider_width"
+        android:gravity="center_horizontal|fill_vertical">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorOutlineVariant" />
+        </shape>
+    </item>
+
+</layer-list>

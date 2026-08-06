@@ -9,17 +9,16 @@
     No text is set here - the Fragment fills both, since the value is a number and the label differs
     per copy.
 
-    The horizontal padding is half the gap between two neighbouring statistics: two adjacent copies
-    contribute space_sm each, so they sit space_lg apart inside the centred cluster.
+    There is deliberately no horizontal padding here. The space between two statistics belongs to
+    the divider between them - one dimension, profile_stat_gap - so that padding here would silently
+    add to it and make that number mean less than it says.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:paddingStart="@dimen/space_sm"
-    android:paddingEnd="@dimen/space_sm">
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/statValue"

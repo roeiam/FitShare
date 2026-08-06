@@ -46,6 +46,11 @@
     <!-- Profile: the workout grid and the three-statistic row -->
     <dimen name="grid_item_gap">8dp</dimen>
     <dimen name="profile_bio_max_height">96dp</dimen>
+    <!-- The one number that tunes how far apart the profile statistics sit. It is the full
+         stat-to-stat distance: the divider View is exactly this wide and the hairline is drawn
+         centred inside it (see drawable/divider_stat.xml), so nothing else contributes and this
+         can be changed on its own without touching the shared spacing scale. -->
+    <dimen name="profile_stat_gap">32dp</dimen>
     <!-- A hairline, and deliberately shorter than the statistic beside it so it reads as a
          separator inside a group rather than as a rule across the screen. -->
     <dimen name="profile_stat_divider_width">1dp</dimen>
