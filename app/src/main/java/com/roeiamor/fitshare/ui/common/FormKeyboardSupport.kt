@@ -17,14 +17,20 @@ import com.roeiamor.fitshare.util.requestVisibleAboveKeyboard
  * remember per form, and a screen added later cannot forget to do it. Walking the view tree once at
  * screen creation is cheap; these hierarchies are small.
  *
- * It fixes two things that are otherwise wrong on every screen:
+ * It fixes three things that are otherwise wrong on every screen:
  *
  *  1. **A multi-line field has no way to dismiss the keyboard.** Enter inserts a newline there,
  *     which is correct, so the IME shows no action key at all. Every multi-line field gets an
- *     explicit "done" end icon instead.
- *  2. **The focused field is not reliably visible.** When the keyboard opens over a scrolling form,
+ *     explicit "done" end icon instead - and so does every numeric one, for a different reason.
+ *  2. **A finishing action key does nothing.** Done, Search, Go and Send now clear focus and put the
+ *     keyboard away, and that is the *only* thing any action key in this app does.
+ *  3. **The focused field is not reliably visible.** When the keyboard opens over a scrolling form,
  *     the field being typed into can end up behind it. Each field asks to be scrolled into view when
  *     it gains focus.
+ *
+ * Together those make one promise worth stating plainly: **a keyboard key never submits anything in
+ * this app.** Publishing, registering, signing in, sending a reset link and posting a comment all
+ * need a deliberate press on their own button.
  *
  * Dismissing the keyboard by tapping outside a field is handled once in
  * [com.roeiamor.fitshare.MainActivity], because it needs the raw touch stream before any view
@@ -36,7 +42,45 @@ object FormKeyboardSupport {
     fun apply(root: View) {
         forEachEditText(root) { editText ->
             addDoneIconIfNeeded(editText)
+            dismissOnFinishingImeAction(editText)
             scrollIntoViewOnFocus(editText)
+        }
+    }
+
+    /**
+     * Makes a **finishing** IME action key put the keyboard away, and nothing else.
+     *
+     * This is the one rule for action keys in the whole app, and it is worth being precise about
+     * what it is not. There used to be a helper that ran a form's submit action from the Done key;
+     * it is deleted, because on the add-workout form it meant finishing a duration published the
+     * workout. **No action key submits anything.** This listener only ever clears focus and hides
+     * the keyboard - it cannot call into a ViewModel, because it is not given anything to call.
+     *
+     * Why it is needed at all rather than leaving the IME to its default: the feed's search field
+     * declares `actionSearch`, so the keyboard shows a search key, and with nothing listening that
+     * key did nothing whatsoever - the keyboard stayed up over the results the user had just
+     * filtered. Search filters live on every keystroke, so the key has no query to run; getting out
+     * of the way *is* the whole job.
+     *
+     * Only **finishing** actions are consumed. `IME_ACTION_NEXT` and `IME_ACTION_PREVIOUS` are
+     * deliberately left alone: those move between fields, and swallowing them would strand the user
+     * on the first field of every form.
+     */
+    private fun dismissOnFinishingImeAction(editText: EditText) {
+        editText.setOnEditorActionListener { view, actionId, _ ->
+            when (actionId) {
+                EditorInfo.IME_ACTION_DONE,
+                EditorInfo.IME_ACTION_SEARCH,
+                EditorInfo.IME_ACTION_GO,
+                EditorInfo.IME_ACTION_SEND -> {
+                    view.clearFocus()
+                    view.hideKeyboard()
+                    // Consumed - and consuming it is the point: nothing further happens.
+                    true
+                }
+
+                else -> false
+            }
         }
     }
 
