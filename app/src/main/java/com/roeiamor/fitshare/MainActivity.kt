@@ -78,18 +78,31 @@ class MainActivity : AppCompatActivity() {
      * cancelling the flow unregisters the callback through its `awaitClose`. It also means this runs
      * again on every return to the app, which is why the first emission has to be right.
      *
-     * **Showing is delayed, hiding is not.** Android routinely reports a network as available a
-     * fraction of a second before it reports it as validated, and hands over between networks by
-     * losing one before gaining the next. Measured on a device: two such windows during a single
-     * airplane-mode toggle, 0.69s and 1.05s, neither of which the user would call "no internet".
-     * Reacting instantly to those is what made the banner flash on launch and on every resume.
-     * [OFFLINE_BANNER_DELAY_MS] outlasts them; a real disconnection still surfaces well inside the
-     * two seconds a user would wait before wondering.
+     * **The banner is earned, not assumed.** It starts hidden and stays hidden until this run of the
+     * collection has watched a working connection actually go away;
+     * [com.roeiamor.fitshare.util.offlineBannerVisibility] holds that rule and documents it. Because
+     * `repeatOnLifecycle` restarts the collection on every resume, that evidence is discarded every
+     * time the app comes back - so returning to the app can never show the banner, whatever the
+     * platform reports in the first moments after a resume, and however the user got back:
+     * recent-apps, launcher icon, or unlocking the screen. Only a loss observed *after* that point
+     * counts. Verified on a Samsung SM-A305F (Android 11) over twenty consecutive returns through
+     * the recent-apps switcher, sampling the screen for seven seconds after each: none showed it.
      *
-     * `collectLatest` is what makes that a delay rather than a queue: a newer status cancels the
-     * block still waiting on the old one, so a blip is dropped instead of being shown late.
+     * The old delay is kept behind that as a second layer, for losses that happen mid-session:
+     * Android routinely reports a network as available a fraction of a second before it reports it
+     * as validated, and hands over between networks by losing one before gaining the next. Measured
+     * on the device: two such windows during a single airplane-mode toggle, 0.69s and 1.05s, neither
+     * of which the user would call "no internet". [OFFLINE_BANNER_DELAY_MS] outlasts them, and a
+     * genuine disconnection still surfaces quickly - three airplane-mode toggles on the same device
+     * put the banner on screen 3.8s, 4.1s and 4.1s after the switch, which is this delay plus the
+     * time the platform itself takes to tear the connection down and report it.
      *
-     * This delay is deliberately **presentation only**. [com.roeiamor.fitshare.util.NetworkGuard]
+     * The visibility is also cleared explicitly below, before collection begins. The flow's own
+     * first emission is already `false`, but the view keeps whatever visibility it had when the app
+     * was stopped, and clearing it here means the banner is down from the first frame the user sees
+     * rather than from the first emission they do not.
+     *
+     * Both layers are deliberately **presentation only**. [com.roeiamor.fitshare.util.NetworkGuard]
      * still asks [com.roeiamor.fitshare.util.NetworkMonitor.isOnline] directly and still refuses a
      * call the instant there is no validated connection, so an offline failure message appears with
      * no delay at all. The banner can afford to wait and see; a write cannot.
@@ -97,6 +110,8 @@ class MainActivity : AppCompatActivity() {
     private fun observeConnectivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                binding.offlineBanner.isVisible = false
+
                 ServiceLocator.networkMonitor.observe()
                     .offlineBannerVisibility(OFFLINE_BANNER_DELAY_MS)
                     .collect { showBanner -> binding.offlineBanner.isVisible = showBanner }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onEach
 
 /**
  * What [NetworkMonitor] knows about the connection at a given moment.
@@ -147,17 +148,41 @@ class NetworkMonitor(context: Context) {
 /**
  * Turns a stream of connection states into "should the offline banner be on screen?".
  *
- * The rule, in one sentence: **showing waits, hiding does not.**
+ * The rule, in two sentences: **the banner is off until this collection has watched a working
+ * connection go away.** Only then does the older rule apply - showing waits, hiding does not.
  *
- * - [NetworkStatus.OFFLINE] emits `true`, but only after [delayMillis] of staying offline.
- * - [NetworkStatus.ONLINE] and [NetworkStatus.UNKNOWN] emit `false` at once.
+ * Two layers, in this order:
  *
- * `collectLatest` is what makes the wait a debounce rather than a queue: when a newer status
- * arrives, the block still sitting in `delay` is cancelled outright, so a connection that dropped
- * and came back inside the window never reaches `send(true)` at all. That is the whole fix - Android
- * reports a network as available slightly before it reports it as validated, and hands over between
- * networks by losing one before gaining the next, so short bursts of "offline" are normal and are
- * not worth telling the user about.
+ * 1. **Evidence.** [NetworkStatus.OFFLINE] can raise the banner only if [NetworkStatus.ONLINE] was
+ *    seen earlier in the same collection. An offline that opens a collection is not a loss anyone
+ *    watched happen - it is the state the app happened to find, read synchronously at the moment a
+ *    screen started - and it emits `false` like everything else.
+ * 2. **Delay.** A loss that clears the first layer still has to last [delayMillis] before the user
+ *    is told, which is what absorbs the sub-second gaps described below.
+ *
+ * The first layer is what makes returning to the app safe. `repeatOnLifecycle` re-collects this flow
+ * on every resume, so the flag below starts false every time: whatever the platform says in the
+ * first moments after a resume - offline, unknown, a capability snapshot that has not been marked
+ * validated yet - the banner cannot act on it, because nothing was observed going wrong. It can only
+ * act on a connection it saw working and then saw fail. That is a deliberate trade: a resume that
+ * lands while the device is genuinely offline shows nothing until the connection returns and drops
+ * again. [NetworkGuard] is unaffected and still refuses writes instantly, so the app stays honest
+ * about what it cannot do - it simply stops guessing in the one place a wrong guess is visible.
+ *
+ * The second layer stays because the first does not cover everything. Once a real connection has
+ * been seen, the platform still reports a network as available slightly before it reports it as
+ * validated, and still hands over between networks by losing one before gaining the next, so short
+ * bursts of "offline" remain normal mid-session. `collectLatest` is what makes the wait a debounce
+ * rather than a queue: a newer status cancels the block still sitting in `delay`, so a drop that
+ * repairs itself inside the window never reaches `send(true)` at all.
+ *
+ * The flag is recorded in `onEach`, deliberately **upstream** of `collectLatest`, because upstream is
+ * the part `collectLatest` may not cancel. Setting it inside the block would make the app's memory
+ * of a working connection depend on that block surviving long enough to run, and the one sequence
+ * where it might not - ONLINE and OFFLINE arriving back to back, which is exactly what a drop
+ * observed immediately after a screen starts looks like - is the sequence that must arm the banner.
+ * A plain `var` is safe here: it is written only from the collecting coroutine, and it lives inside
+ * the `channelFlow` block, so each collection gets its own.
  *
  * A `Flow` operator rather than an `if` inside the Activity, so the rule can be tested against
  * virtual time instead of against a real device's reconnect timing, which is not controllable.
@@ -165,12 +190,15 @@ class NetworkMonitor(context: Context) {
  * @param delayMillis how long the connection must stay down before the user is told.
  */
 fun Flow<NetworkStatus>.offlineBannerVisibility(delayMillis: Long): Flow<Boolean> = channelFlow {
-    collectLatest { status ->
-        if (status == NetworkStatus.OFFLINE) {
-            delay(delayMillis)
-            send(true)
-        } else {
-            send(false)
+    var hasSeenConnection = false
+
+    onEach { status -> if (status == NetworkStatus.ONLINE) hasSeenConnection = true }
+        .collectLatest { status ->
+            if (status == NetworkStatus.OFFLINE && hasSeenConnection) {
+                delay(delayMillis)
+                send(true)
+            } else {
+                send(false)
+            }
         }
-    }
 }.distinctUntilChanged()
