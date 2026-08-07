@@ -833,3 +833,67 @@ a balanced pair rather than as three with one missing. Both gaps measure 84px, w
 from the hierarchy on another user's profile, not merely blank.
 
 `README.md` section 8's security table said the statistic shows `—`; it now says it is hidden.
+
+---
+
+## The offline banner, made opt-in on evidence
+
+The banner was still appearing on a healthy connection when returning to the app, on the one path the
+earlier automation could not drive. Rather than hunt the root cause for a third time, the display
+rule was inverted: **the banner is now earned rather than assumed.**
+
+**The rule.** An `OFFLINE` may raise the banner only if an `ONLINE` was observed *earlier in the same
+collection*. An offline that merely opens a collection - which is exactly what every resume looks
+like, and the moment the platform's answers are least trustworthy - emits `false` like everything
+else, because nobody watched anything fail. `repeatOnLifecycle` re-collects on every resume, so that
+evidence is discarded each time the app comes back and has to be earned again. The 1.5s debounce is
+kept **behind** the new rule as a second layer, for the sub-second false windows that still occur
+mid-session once a real connection has been seen.
+
+The arming is recorded in `onEach`, deliberately **upstream** of `collectLatest`, because upstream is
+the part `collectLatest` may not cancel. Written inside the block, the app's memory of a working
+connection would depend on that block surviving long enough to run - and the one sequence where it
+might not is `ONLINE` and `OFFLINE` arriving back to back, which is precisely the sequence that must
+arm the banner.
+
+**`NetworkGuard.kt` has no diff**, and neither does `NetworkMonitor.isOnline`. Offline failures still
+surface with no delay and no write is ever handed to Firestore to queue. Only the presentation moved.
+
+### The trade-off, accepted deliberately
+
+**Resuming while already offline shows no banner until the connection returns and drops again.** That
+is not a defect to be fixed later; it follows directly from the rule. "Reset on every resume, and
+reappear only on a loss observed after that point" cannot also mean "trust the offline state you find
+on the way in" - the whole reason the banner flashed is that the state found on the way in is not
+reliable. The app is still honest in that situation: every blocked write reports `אין חיבור לאינטרנט`
+immediately through `NetworkGuard`. What is lost is the standing reminder, not the failure message.
+Recorded in `README.md` §9 as a known limitation.
+
+### Verified on the Samsung SM-A305F, Android 11
+
+Driven over adb, detecting the banner by sampling the screen for its `@color/danger` pixels rather
+than by eye, for seven seconds after every resume:
+
+| | cycles | showed the banner |
+|---|---|---|
+| return through the recent-apps switcher | 20 | **0** |
+| screen off, wake, PIN unlock | 8 | **0** |
+| airplane mode on, app open | 4 | **4** - at 3.5s, 3.8s, 4.1s, 4.1s |
+
+The airplane runs are what make the 28 negatives worth anything: one was run **after** the resume
+cycles, so the detector was proven to still fire at the end of the session and not merely at the
+start. Time to appear is the 1.5s delay plus the time the platform itself takes to tear the
+connection down and report it. On the way back the banner cleared as soon as the connection
+re-validated, 7.6 - 20.3s later depending on how long Wi-Fi took to re-associate.
+
+Eight unit tests in `OfflineBannerVisibilityTest` pin the rule against virtual time, including the
+two that matter most: an offline that opens a collection never shows the banner, and evidence is not
+carried from one collection into the next.
+
+**One measurement mistake worth recording, so it is not repeated.** The first airplane run showed no
+banner, and the process-age numbers used to explain it - `ps -o ETIME` and `/proc/<pid>/stat` field 22
+against `/proc/uptime` - are **meaningless on this device**: a control process started five seconds
+earlier reported an age of 704 seconds, because deep-sleep time inflates uptime relative to the
+tick-based start time on a phone that has been up for three days. That first observation was on a
+process that can no longer be identified; every run on a confirmed-fresh process behaved as the table
+says. Use `pm dump`'s `lastUpdateTime` and a PID change across `am force-stop`, not process age.
