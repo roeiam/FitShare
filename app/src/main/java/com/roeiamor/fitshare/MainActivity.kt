@@ -85,17 +85,18 @@ class MainActivity : AppCompatActivity() {
      * time the app comes back - so returning to the app can never show the banner, whatever the
      * platform reports in the first moments after a resume, and however the user got back:
      * recent-apps, launcher icon, or unlocking the screen. Only a loss observed *after* that point
-     * counts. Verified on a Samsung SM-A305F (Android 11) over twenty consecutive returns through
-     * the recent-apps switcher, sampling the screen for seven seconds after each: none showed it.
+     * counts. Verified on a Samsung SM-A305F (Android 11), sampling the screen for seven seconds
+     * after every resume: twenty consecutive returns through the recent-apps switcher, and eight
+     * screen-off cycles returning through a PIN unlock. None of the twenty-eight showed it.
      *
      * The old delay is kept behind that as a second layer, for losses that happen mid-session:
      * Android routinely reports a network as available a fraction of a second before it reports it
      * as validated, and hands over between networks by losing one before gaining the next. Measured
      * on the device: two such windows during a single airplane-mode toggle, 0.69s and 1.05s, neither
      * of which the user would call "no internet". [OFFLINE_BANNER_DELAY_MS] outlasts them, and a
-     * genuine disconnection still surfaces quickly - three airplane-mode toggles on the same device
-     * put the banner on screen 3.8s, 4.1s and 4.1s after the switch, which is this delay plus the
-     * time the platform itself takes to tear the connection down and report it.
+     * genuine disconnection still surfaces quickly - four airplane-mode toggles on the same device
+     * put the banner on screen 3.5s, 3.8s, 4.1s and 4.1s after the switch, which is this delay plus
+     * the time the platform itself takes to tear the connection down and report it.
      *
      * The visibility is also cleared explicitly below, before collection begins. The flow's own
      * first emission is already `false`, but the view keeps whatever visibility it had when the app
