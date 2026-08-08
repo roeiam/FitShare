@@ -44,6 +44,19 @@
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.FitShare.Card" />
 
+        <!--
+            The text chain hangs off the parent, not off the thumbnail, and that is deliberate.
+
+            A favourite with no photo hides favoriteImage, and a GONE widget in ConstraintLayout
+            collapses to a point - so a title anchored to its top and bottom would have been packed
+            into a zero-height span, and the row, which is wrap_content, would have had nothing left
+            to give it height. Anchored to the parent instead, the text stands on its own and the row
+            is as tall as whatever is actually in it.
+
+            layout_goneMarginStart pulls the text back to the card's padding when the thumbnail is
+            gone; without it the row would keep a 72dp-wide hole where the photo used to be, which is
+            the whole defect this change exists to remove.
+        -->
         <TextView
             android:id="@+id/favoriteTitle"
             style="@style/TextAppearance.FitShare.Title"
@@ -55,8 +68,9 @@
             app:layout_constraintBottom_toTopOf="@id/favoriteAuthor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/favoriteImage"
-            app:layout_constraintTop_toTopOf="@id/favoriteImage"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
+            app:layout_goneMarginStart="0dp"
             tools:text="אימון כוח לפלג גוף עליון" />
 
         <TextView
@@ -68,10 +82,11 @@
             android:layout_marginTop="@dimen/space_xs"
             android:ellipsize="end"
             android:maxLines="1"
-            app:layout_constraintBottom_toBottomOf="@id/favoriteImage"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/favoriteImage"
             app:layout_constraintTop_toBottomOf="@id/favoriteTitle"
+            app:layout_goneMarginStart="0dp"
             tools:text="רועי אמור · כוח" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

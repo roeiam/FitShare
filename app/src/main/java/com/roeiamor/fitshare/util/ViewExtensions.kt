@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.google.android.material.snackbar.Snackbar
@@ -87,23 +88,36 @@ private const val KEYBOARD_CLEARANCE_PX = 96
  */
 
 /**
- * Loads a workout photo, or shows the placeholder when there is none.
+ * Loads a workout photo, or removes the image view entirely when there is none.
  *
- * A workout without a photo is normal, not an error - the card still has to look right - so a null
- * or blank URL clears any previous request and shows the placeholder rather than attempting a load
- * that would fail.
+ * A workout without a photo is normal, not an error, and the honest answer is to take the image out
+ * of the layout rather than to fill it with a grey placeholder. A 16:9 block on a feed card - or a
+ * 240dp one on the details screen - spent on an icon that says "there is no photo" is a third of the
+ * card telling the reader nothing. `GONE` rather than `INVISIBLE`, so the space collapses and the
+ * title moves up: the layout follows the content.
  *
- * Clearing matters because views are recycled: without it, a card with no image would briefly show
- * whichever photo the recycled view was displaying before.
+ * **The visibility is assigned on both paths, never only when there is an image.** Views are
+ * recycled, so a bind that skipped the assignment would inherit whatever the previous item left -
+ * a hidden view for a workout that does have a photo, or worse, the previous workout's photo still
+ * on screen. The drawable is cleared for the same reason.
+ *
+ * The placeholder still exists, and is still right, in the one place it was always for: the moment
+ * between asking Glide for a real photo and it arriving.
+ *
+ * Every caller renders a workout image through this function - the feed card, the details screen,
+ * the profile grid and the favourites row - so the rule holds in all four without any of them
+ * needing to remember it.
  *
  * @param url a Cloudinary URL, or null.
  */
 fun ImageView.loadWorkoutImage(url: String?) {
     if (url.isNullOrBlank()) {
         Glide.with(this).clear(this)
-        setImageResource(R.drawable.placeholder_workout)
+        setImageDrawable(null)
+        isVisible = false
         return
     }
+    isVisible = true
     Glide.with(this)
         .load(url)
         .placeholder(R.drawable.placeholder_workout)
