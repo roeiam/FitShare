@@ -987,3 +987,82 @@ deleted afterwards, with the favourite unsaved first so the deletion could not l
 favourite of `README.md` §9 item 8. The counters were checked back to where they started both times.
 One genuinely photo-less workout does exist on רועי אמור's profile - `אימון קפיצות וכחברה מתפרץ` - so
 the tile is on screen in real data, not only in a test.
+
+---
+
+## A sign-in form inside the add-workout screen — OPEN, not reproduced, not fixed
+
+**This section is deliberately not written as a solved bug.** A real defect was found next to it and
+has been fixed, and that fix is described below - but nobody has seen the reported symptom since, and
+nothing here should be read as proof that it is gone.
+
+**Reported by Roei.** On the add-workout form: pick a photo, tap **שינוי תמונה**, pick a second one.
+The new photo did not load, and the login screen's **email and password fields appeared inside the
+add-workout screen, below the title** - two destinations rendered at once. It happened **every time**,
+with a signed-in session.
+
+**It stopped reproducing before it could be caught.** Roei retested a short time later and could not
+reproduce it; neither could I. **No code changed in between.** So it was not fixed by anything - it
+simply stopped appearing, which is the least satisfying state a bug can be in and the reason this
+section exists.
+
+### What was tried, and what each attempt ruled out
+
+Every row here ran on the **unfixed** build, which is what makes them worth recording: the defect
+described below was present the whole time and none of these forced it to misbehave.
+
+| forced condition | result |
+|---|---|
+| Activity recreation, **Don't keep activities** on, add form on screen | form restored intact, no login fields |
+| process killed with `am kill` while backgrounded, returned through recents | form restored, typed title preserved, no login fields |
+| logcat across all of the above | no crash, no `FragmentManager` and no `Navigation` warning |
+
+The reported flow itself **could not be driven from adb**: DocumentsUI would not accept synthetic
+taps on this device that day - grid and list view, `tap` and press-and-hold, integer coordinates,
+item bounds read from the hierarchy - although taps registered fine on its own menus, and the same
+technique had selected a photo the day before. So the second pick was never reached by automation,
+and the symptom was never observed first-hand.
+
+### The real defect found in that area, which is fixed
+
+`MainActivity.setUpNavigation` ran from `onCreate` with no `savedInstanceState` guard and did this
+every single time, including on a rotation, a return from the picker, and a process restored from its
+saved state:
+
+```kotlin
+val isSignedIn = ServiceLocator.authRepository.isSignedIn   // FirebaseAuth.currentUser, read synchronously
+val graph = navController.navInflater.inflate(R.navigation.nav_graph)
+graph.setStartDestination(if (isSignedIn) R.id.feedFragment else R.id.loginFragment)
+navController.graph = graph
+```
+
+Two things are wrong with that, and they compound. A recreation already carries a `NavController`
+that has restored its own back stack, and assigning a freshly inflated graph over it throws that work
+away and can navigate somewhere the user never asked to go. And the value it recomputes from is read
+**synchronously**: a restoring process can answer null for a user who is in fact signed in, so the
+recomputation could resolve to `loginFragment` while the user's real screen was still on the stack.
+That is the exact shape of the reported symptom, which is why it was worth fixing on its own merits
+whether or not it was the cause.
+
+**The fix.** The graph is built once per task, from the first `onCreate` only. A recreation now
+re-attaches the listeners and lets the restored state stand. The resolved start destination is
+carried across recreations in `onSaveInstanceState`, so the one remaining rebuild path - a defensive
+branch for a restore that somehow produced no destination at all - reuses the answer this task
+started with instead of asking `FirebaseAuth` again.
+
+### Verified after the fix, on the Samsung SM-A305F
+
+| flow | result |
+|---|---|
+| cold start, signed in | feed |
+| cold start, signed out (emulator, fresh install, no session) | login |
+| rotation mid-form, portrait to landscape and back | form kept, typed title intact, no login fields |
+| process killed **while the photo picker was in the foreground**, then Back | form restored, typed title intact, no login fields |
+
+The last row is the closest deterministic stand-in for the reported flow that could be produced on
+demand, and it is the one the fix is aimed at.
+
+**What is still unexplained.** Why two destinations rendered simultaneously rather than one replacing
+the other; why the new photo failed to load in the same moment; and why it reproduced every time and
+then stopped. If it returns, the things worth capturing before touching anything are `adb logcat -d`
+straight after, and whether the add form is still underneath the login fields or has been replaced.

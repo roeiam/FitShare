@@ -54,6 +54,15 @@ class MainActivity : AppCompatActivity() {
     private var isAuthDestination = false
     private var isKeyboardVisible = false
 
+    /**
+     * The destination this Activity started on, remembered so a recreation never re-decides it.
+     *
+     * Zero until the first [onCreate] resolves it. Saved and restored with the Activity, because the
+     * question it answers - "was there a signed-in user when this task began?" - must be answered
+     * once per task and not once per Activity instance.
+     */
+    private var startDestinationId = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         forceHebrewLocale()
@@ -62,9 +71,32 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         applySystemBarInsets()
-        setUpNavigation()
+        startDestinationId = savedInstanceState?.getInt(KEY_START_DESTINATION_ID) ?: 0
+        setUpNavigation(isFirstCreate = savedInstanceState == null)
         observeConnectivity()
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(KEY_START_DESTINATION_ID, startDestinationId)
+    }
+
+    /**
+     * Which screen this task opens on, from the session as it stands right now.
+     *
+     * Called once per task, from the first [onCreate] only. Choosing the graph's start destination -
+     * rather than navigating away from the wrong one afterwards - is what makes Back from the feed
+     * exit the app instead of walking backwards into a login screen the user has already passed
+     * (SPEC section 5).
+     */
+    private fun resolveStartDestination(): Int =
+        if (ServiceLocator.authRepository.isSignedIn) R.id.feedFragment else R.id.loginFragment
+
+    /** The navigation graph, with [startDestination] as the screen it opens on. */
+    private fun buildGraph(startDestination: Int) =
+        navController.navInflater.inflate(R.navigation.nav_graph).apply {
+            setStartDestination(startDestination)
+        }
 
     /**
      * Shows the banner whenever the device has no usable internet (SPEC section 6).
@@ -229,24 +261,47 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Inflates the graph with a start destination chosen from the current session, connects the
-     * bottom bar to it, and hides that bar on the auth screens.
+     * Connects the bottom bar to the graph and hides that bar on the auth screens - and, on a first
+     * launch only, decides which screen the app opens on.
      *
-     * Choosing the start destination - rather than navigating away after the fact - is what makes
-     * Back from the feed exit the app instead of walking backwards into a login screen the user has
-     * already passed (SPEC section 5).
+     * **The graph is built once per task, not once per `onCreate`.** It used to be re-inflated and
+     * re-assigned on every creation, with the start destination recomputed from
+     * `FirebaseAuth.currentUser` each time. That is wrong for two reasons that compound. A recreation
+     * - a rotation, a return from the photo picker, a process restored from its saved state - already
+     * carries a `NavController` that has restored its own back stack, and assigning a fresh graph
+     * over it discards that work and can navigate somewhere the user never asked to go. And the value
+     * it recomputed from is read synchronously: a restoring process can answer null for a user who is
+     * signed in, so the recomputation could resolve to the login screen while the user's real screen
+     * was still on the stack.
+     *
+     * So on a recreation this does nothing but re-attach the listeners; the restored state stands.
+     * [onSaveInstanceState] carries [startDestinationId] across, so even the defensive rebuild below
+     * cannot re-decide the answer from a fresh auth read.
+     *
+     * @param isFirstCreate true when `savedInstanceState` was null - a genuine first launch of this
+     *   task rather than a recreation of it.
      */
-    private fun setUpNavigation() {
+    private fun setUpNavigation(isFirstCreate: Boolean) {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        val isSignedIn = ServiceLocator.authRepository.isSignedIn
-        val graph = navController.navInflater.inflate(R.navigation.nav_graph)
-        graph.setStartDestination(
-            if (isSignedIn) R.id.feedFragment else R.id.loginFragment
-        )
-        navController.graph = graph
+        if (isFirstCreate) {
+            startDestinationId = resolveStartDestination()
+            navController.graph = buildGraph(startDestinationId)
+        } else if (navController.currentDestination == null) {
+            // Defensive, and deliberately not a fresh auth read. Reaching here means the restore
+            // produced no destination at all, and the one thing that must not happen then is asking
+            // FirebaseAuth again: `currentUser` is read synchronously and a restoring process can
+            // answer null for a user who is in fact signed in, which would drop a login screen on
+            // top of whatever the user actually had open. The destination this Activity resolved
+            // when it first started is the honest answer, so it is remembered across the recreation
+            // and reused. The auth read is the last resort, for a saved state that somehow carries
+            // no destination at all.
+            navController.graph = buildGraph(
+                if (startDestinationId != 0) startDestinationId else resolveStartDestination()
+            )
+        }
 
         // Each item id in menu_bottom_nav.xml is also a destination id in nav_graph.xml, so a tab
         // tap is simply "navigate to the destination with this id".
@@ -354,6 +409,9 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         /** The only language the app ever runs in (SPEC section 9.2). */
         const val HEBREW_LANGUAGE_TAG = "he"
+
+        /** Where [startDestinationId] is kept across a recreation. */
+        const val KEY_START_DESTINATION_ID = "startDestinationId"
 
         /**
          * How long the connection must stay down before the banner appears.
