@@ -4,7 +4,7 @@ Eight phases, updated at the end of each one. Phase 8 was the last.
 
 The Phase 0 plan and the per-phase reports were working files and were deleted in Phase 8. What
 mattered from them survives: the dependency justifications and the known difficulties are in
-`README.md`, the architecture answers in `ARCHITECTURE_QA.md`, and the summaries below.
+`README.md`, and the summaries below.
 
 ---
 
@@ -527,10 +527,19 @@ document the submission needs.
 (15 lecturer questions with answers, Hebrew), and this file. The Phase 0 plan, the seven per-phase
 reports and `NAV_UI_FIXES.md` were deleted — working files, not deliverables.
 
+**Since updated:** `DEMO_SCRIPT.md` and `ARCHITECTURE_QA.md` were removed from the repository before
+submission as well. Both were written and used, and copies are kept outside the repo; they are simply
+not part of what is delivered. The two documents that ship are `README.md` and this file.
+
 ### Still open
 
 1. **Five of the six README screenshots are placeholders.** The details screen is captured; the
    other five need one pass through the app.
+
+   **Closed.** Seven screenshots taken on the Samsung are committed under `docs/screenshots/` -
+   login, feed, add_workout, favorites, profile, and the details screen in both themes - and README
+   §2 embeds all seven inline. The two stills that were never referenced by anything,
+   `details_dark_inactive.png` and `details_long_name.png`, were dropped in the same pass.
 2. **`error_image_upload` is defined but unreachable** — kept because SPEC §11 asks for it, not
    fixed because that is a behaviour change and the code was frozen. See `README.md` §9 item 4.
 
