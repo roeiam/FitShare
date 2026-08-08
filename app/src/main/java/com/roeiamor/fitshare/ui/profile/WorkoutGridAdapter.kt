@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.roeiamor.fitshare.data.model.Workout
 import com.roeiamor.fitshare.databinding.ItemWorkoutGridBinding
-import com.roeiamor.fitshare.util.loadWorkoutImage
+import com.roeiamor.fitshare.util.loadGridWorkoutImage
 
 /**
  * Renders the grid of a user's own workouts on the profile screen.
@@ -48,7 +48,7 @@ class WorkoutGridAdapter(
 
         /** Fills the cell. Sets every view unconditionally, because views are recycled. */
         fun bind(workout: Workout) {
-            binding.gridImage.loadWorkoutImage(workout.imageUrl)
+            binding.gridImage.loadGridWorkoutImage(workout.imageUrl)
             binding.gridTitle.text = workout.title
             binding.root.setOnClickListener { onWorkoutClick(workout) }
         }

@@ -906,3 +906,84 @@ earlier reported an age of 704 seconds, because deep-sleep time inflates uptime 
 tick-based start time on a phone that has been up for three days. That first observation was on a
 process that can no longer be identified; every run on a confirmed-fresh process behaved as the table
 says. Use `pm dump`'s `lastUpdateTime` and a PID change across `am force-stop`, not process age.
+
+---
+
+## The workout photo that was not there
+
+**Reported by Roei:** a workout with no photo still drew the full-height image block, an empty grey
+area where the picture would be. The card looked broken.
+
+The cause was one line in `util/ViewExtensions.kt`. `loadWorkoutImage` treated a null or blank URL as
+a case for `placeholder_workout` - the same tonal fill it shows while a real photo loads - so a
+workout with no picture reserved a 16:9 slot on a feed card, and 240dp on the details screen, to say
+nothing at all.
+
+### Hiding it, where the layout can actually shrink
+
+The helper now sets `View.GONE` and clears the drawable. All four screens already render the field
+through that one function, so the rule did not have to be repeated in four adapters - and the
+visibility is assigned on **both** branches, never only when there is an image, because a recycled
+view that skipped the assignment would inherit the previous item's state, photo included.
+
+**`item_favorite.xml` was the one layout that could not take it unchanged**, and it is worth
+explaining why, because nothing about it is visible from the Kotlin side. The thumbnail was both the
+row's height and the anchor for the title and the author line - they were constrained to its top and
+its bottom. A `GONE` widget in ConstraintLayout collapses to a *point*, so those two text views would
+have been packed into a zero-height span, and the row, which is `wrap_content`, would have had
+nothing left to measure itself from. The text chain now hangs off the parent instead, and
+`layout_goneMarginStart="0dp"` pulls it back to the card padding rather than leaving a 72dp hole
+where the thumbnail used to be. The other three layouts collapse correctly as they stand: the feed
+card and the grid cell both constrain the title below the image, and the details screen is a vertical
+`LinearLayout`, which removes a `GONE` child outright.
+
+Measured on the Samsung, the same card with and without a photo:
+
+| | with photo | without |
+|---|---|---|
+| feed card | 1015px | **459px** |
+| favourites row | 253px | **191px** |
+| details screen | `heroImage` present | **absent**, title at y=241 |
+
+Three cycles of scrolling the feed deep and back left no stale image on the photo-less card and no
+missing image on a recycled one.
+
+### The profile grid needed the opposite fix
+
+Hiding the image there bought nothing. A `GridLayoutManager` row is as tall as its tallest cell, so a
+photo-less cell keeps that height whatever its own content wants: the image vanished and the title
+was left stranded at the top of an empty card, which looked worse than the bug being fixed.
+
+So the grid, and only the grid, calls `loadGridWorkoutImage` - a separate path with a name that says
+which screen it is for. It fills the slot with a quiet tile: `@color/placeholder_fill`, the tonal
+surface already used behind every loading photo, with the app's own heart-and-dumbbell mark centred
+at its intrinsic 28dp and tinted `@color/placeholder_icon`. **No new colour and no new drawable were
+added** - both colours already existed and both already carry `values-night` overrides, which is what
+makes the tile a shade of the surface in either theme instead of a grey block punched into a dark
+screen. `loadWorkoutImage` still hides, and the other three screens still call it.
+
+Every property that path touches - background, tint, scale type, visibility and the image itself - is
+assigned on both branches, because a grid cell is recycled between the two kinds of workout and a
+property set on only one path is inherited by the next item. Checked by pixel rather than by eye
+after three rounds of scrolling and leaving and re-entering the tab: the photo-less cells read
+exactly `#E3E9F2`, the fill colour, and the cell beside them read photo colours.
+
+### A false negative worth recording, because it nearly shipped as a pass
+
+The first sweep of the feed reported six photo-less workouts whose cards had collapsed, and it was
+wrong about all six. **`uiautomator dump` only contains what is on screen**, so a card scrolled
+partly under the sticky search-and-filter header is missing its own children - which looks precisely
+like a card whose image is `GONE`. The tell was that nudging the scroll by 200px made the image
+reappear on the very same card.
+
+The method that does work: trust a card only when its **author row is present in the same dump**.
+That proves the card was measured from its own top rather than clipped, and only then does a missing
+`workoutImage` mean anything. Every measurement in the table above was taken that way.
+
+The same sweep established something more useful: **the demo data contains no photo-less workout at
+all** - every seeded workout has a picture, which is why the bug could not be reproduced from the
+data as it stood. Each fix was therefore verified against a workout published through the app and
+deleted afterwards, with the favourite unsaved first so the deletion could not leave the orphaned
+favourite of `README.md` §9 item 8. The counters were checked back to where they started both times.
+One genuinely photo-less workout does exist on רועי אמור's profile - `אימון קפיצות וכחברה מתפרץ` - so
+the tile is on screen in real data, not only in a test.

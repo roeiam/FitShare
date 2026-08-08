@@ -104,9 +104,10 @@ private const val KEYBOARD_CLEARANCE_PX = 96
  * The placeholder still exists, and is still right, in the one place it was always for: the moment
  * between asking Glide for a real photo and it arriving.
  *
- * Every caller renders a workout image through this function - the feed card, the details screen,
- * the profile grid and the favourites row - so the rule holds in all four without any of them
- * needing to remember it.
+ * Three of the four places a workout photo is drawn come through here - the feed card, the details
+ * screen and the favourites row - so the rule holds in all of them without any one needing to
+ * remember it. The profile grid is the deliberate exception and calls [loadGridWorkoutImage]
+ * instead, for the reason documented there: its rows cannot shrink, so hiding buys nothing.
  *
  * @param url a Cloudinary URL, or null.
  */
@@ -118,6 +119,52 @@ fun ImageView.loadWorkoutImage(url: String?) {
         return
     }
     isVisible = true
+    Glide.with(this)
+        .load(url)
+        .placeholder(R.drawable.placeholder_workout)
+        .error(R.drawable.image_error)
+        .into(this)
+}
+
+/**
+ * The profile grid's version of [loadWorkoutImage]: it fills the photo slot instead of removing it.
+ *
+ * The grid is the one place where hiding is the wrong answer, and the reason is the grid itself. A
+ * `GridLayoutManager` row is as tall as its tallest cell, so a photo-less cell keeps that height
+ * whatever its own content wants - hiding the image there does not collapse anything, it just strands
+ * the title at the top of an empty card. Everywhere else the layout can actually shrink, which is why
+ * [loadWorkoutImage] still hides and is still what the feed, the details screen and the favourites
+ * row call.
+ *
+ * So the slot gets a quiet tile: [R.color.placeholder_fill] - the tonal surface already used behind
+ * every loading photo - with the app's own heart-and-dumbbell mark centred at its intrinsic size and
+ * tinted [R.color.placeholder_icon]. Both colours carry `values-night` overrides, so the tile is a
+ * shade of the surface in either theme rather than a grey block punched into a dark screen. The mark
+ * is deliberately small against the cell: the cell should read as a workout with no picture, not as a
+ * picture of an icon.
+ *
+ * Every property this function touches is assigned on **both** branches - background, tint, scale
+ * type, visibility and the image itself. A grid cell is recycled between a workout with a photo and
+ * one without, and any property set on only one path would be inherited by the next item: a real
+ * photo drawn on top of the tile's fill, or a photo squeezed into `CENTER_INSIDE` at icon size.
+ *
+ * @param url a Cloudinary URL, or null.
+ */
+fun ImageView.loadGridWorkoutImage(url: String?) {
+    isVisible = true
+
+    if (url.isNullOrBlank()) {
+        Glide.with(this).clear(this)
+        setBackgroundColor(ContextCompat.getColor(context, R.color.placeholder_fill))
+        scaleType = ImageView.ScaleType.CENTER_INSIDE
+        imageTintList = ContextCompat.getColorStateList(context, R.color.placeholder_icon)
+        setImageResource(R.drawable.ic_like_mark)
+        return
+    }
+
+    background = null
+    scaleType = ImageView.ScaleType.CENTER_CROP
+    imageTintList = null
     Glide.with(this)
         .load(url)
         .placeholder(R.drawable.placeholder_workout)
