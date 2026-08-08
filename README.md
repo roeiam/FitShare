@@ -10,7 +10,7 @@
 פרויקט גמר בקורס פיתוח אנדרואיד. נכתב ב‑Kotlin עם XML Views, ארכיטקטורת MVVM ו‑Firebase.
 
 
-קישור לסרטון : https://drive.google.com/file/d/1kuAKpomSPCNxXAwVZiB_lBEEIECejN9b/view?usp=sharing
+קישור לסרטון הסבר : https://drive.google.com/file/d/1YLvZKDKbv0yP_xRy6LlpklOyP1Rln96i/view?usp=sharing
 </div>
 
 ---
