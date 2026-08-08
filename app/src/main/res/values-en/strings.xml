@@ -53,6 +53,7 @@
     <!-- Add workout -->
     <string name="add_title">Post a workout</string>
     <string name="add_photo">Add a photo</string>
+    <string name="add_photo_change">Change photo</string>
     <string name="add_from_camera">Camera</string>
     <string name="add_from_gallery">Gallery</string>
     <string name="add_workout_name">Workout name</string>

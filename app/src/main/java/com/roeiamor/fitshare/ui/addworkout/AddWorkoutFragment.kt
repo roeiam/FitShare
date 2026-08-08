@@ -252,9 +252,19 @@ class AddWorkoutFragment : BaseFragment<FragmentAddWorkoutBinding>() {
     /** Draws one state: the photo, the three inline errors, and the upload progress. */
     private fun render(state: AddWorkoutUiState) {
         // A newly picked photo wins; otherwise the one the workout already has, when editing.
-        binding.workoutImage.loadWorkoutImage(
-            state.imageUri?.toString() ?: state.existingImageUrl
-        )
+        val photo = state.imageUri?.toString() ?: state.existingImageUrl
+        binding.workoutImage.loadWorkoutImage(photo)
+
+        // The button's label is derived from the same value the preview is, and by the same
+        // emptiness test, so the two cannot disagree - a form showing a photo above a button that
+        // still says "add a photo" is the defect this replaces. Assigned on every render rather than
+        // when a photo is picked: clearing one has to put the label back, and opening the editor on
+        // a workout that already has a photo has to arrive at "change" without anything being
+        // picked at all.
+        val photoLabel =
+            if (photo.isNullOrBlank()) R.string.add_photo else R.string.add_photo_change
+        binding.choosePhoto.setText(photoLabel)
+        binding.choosePhoto.contentDescription = getString(photoLabel)
 
         binding.screenTitle.setText(
             if (viewModel.isEditing) R.string.details_edit_title else R.string.add_title

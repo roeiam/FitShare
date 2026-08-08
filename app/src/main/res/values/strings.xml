@@ -50,6 +50,8 @@
     <!-- Add workout -->
     <string name="add_title">העלאת אימון</string>
     <string name="add_photo">הוספת תמונה</string>
+    <!-- The same button once a photo has been chosen, so its label describes what tapping it does. -->
+    <string name="add_photo_change">שינוי תמונה</string>
     <string name="add_from_camera">צילום</string>
     <string name="add_from_gallery">מהגלריה</string>
     <string name="add_workout_name">שם האימון</string>
