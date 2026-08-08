@@ -1023,6 +1023,19 @@ item bounds read from the hierarchy - although taps registered fine on its own m
 technique had selected a photo the day before. So the second pick was never reached by automation,
 and the symptom was never observed first-hand.
 
+**One hypothesis is positively disproved rather than merely untested.** The suspicion that the picker
+callback was lost to a recreated Activity - which would have explained the photo not loading - does
+not hold: all three contracts in `AddWorkoutFragment` are `registerForActivityResult` **field
+initializers** (`pickImage`, `takePicture`, `requestCameraPermission`), which is the documented
+pattern precisely because a fragment re-registers them on every recreation. A restored Activity
+cannot deliver that result to a stale instance.
+
+**A note on method, because it cost time twice.** `uiautomator dump` is not a reliable witness here.
+It omits nodes that are off-screen, so a card clipped under a sticky header looks identical to one
+whose view is `GONE`; and it returned stale content at least once, reporting the feed while the
+screen actually showed the login form. Both times a screenshot settled it. Any conclusion in this
+area drawn from a dump alone should be confirmed against a screenshot before it is believed.
+
 ### The real defect found in that area, which is fixed
 
 `MainActivity.setUpNavigation` ran from `onCreate` with no `savedInstanceState` guard and did this
@@ -1044,6 +1057,11 @@ recomputation could resolve to `loginFragment` while the user's real screen was 
 That is the exact shape of the reported symptom, which is why it was worth fixing on its own merits
 whether or not it was the cause.
 
+**It is not claimed as the cause, and the table above is why.** That defect was in the build those
+three forced conditions ran against. Recreation and process death both restored correctly *with the
+bug still present*, so nothing here demonstrates it producing the reported screen. It is a real fault
+that was found while looking for another one, and it is fixed; that is the whole claim.
+
 **The fix.** The graph is built once per task, from the first `onCreate` only. A recreation now
 re-attaches the listeners and lets the restored state stand. The resolved start destination is
 carried across recreations in `onSaveInstanceState`, so the one remaining rebuild path - a defensive
@@ -1062,7 +1080,21 @@ started with instead of asking `FirebaseAuth` again.
 The last row is the closest deterministic stand-in for the reported flow that could be produced on
 demand, and it is the one the fix is aimed at.
 
-**What is still unexplained.** Why two destinations rendered simultaneously rather than one replacing
-the other; why the new photo failed to load in the same moment; and why it reproduced every time and
-then stopped. If it returns, the things worth capturing before touching anything are `adb logcat -d`
-straight after, and whether the add form is still underneath the login fields or has been replaced.
+**What is still unexplained.** Three things, and they are the reason this section stays open:
+
+1. **Why two destinations rendered at once.** `FragmentNavigator` *replaces* the fragment in the
+   container; it does not stack them. Nothing found so far accounts for the add form and the login
+   form being on screen together, which is the part that makes a simple "it navigated to the wrong
+   destination" explanation insufficient.
+2. **Why the second photo failed to load in the same moment** - and, given the disproof above, not
+   because the picker result went to a stale callback.
+3. **Why it reproduced every single time and then stopped**, with no code change in between.
+
+**If it comes back, capture this before touching anything:**
+
+- `adb logcat -d > bug.txt` immediately - a stack trace, or a `FragmentManager` or `Navigation`
+  warning, would settle the mechanism in one read.
+- Whether the add form is still **underneath** the login fields or has been **replaced** by them.
+  That single observation separates "two fragments in one container" from "navigated away".
+- Whether the app had been backgrounded a long time first, and whether the device was low on memory -
+  the conditions that decide whether the process was restored rather than merely recreated.
