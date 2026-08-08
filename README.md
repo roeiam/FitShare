@@ -1,3 +1,5 @@
+<div dir="rtl" align="right">
+
 # FitShare
 
 **אימונים, השראה והתקדמות במקום אחד**
@@ -7,7 +9,11 @@
 
 פרויקט גמר בקורס פיתוח אנדרואיד. נכתב ב‑Kotlin עם XML Views, ארכיטקטורת MVVM ו‑Firebase.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 1. מה האפליקציה עושה, ואיזו בעיה היא פותרת
 
@@ -36,7 +42,11 @@ FitShare עונה על שתיהן עם דבר אחד: פיד של אימונים
 - באנר "אין חיבור לאינטרנט"
 - כל האפליקציה בעברית, RTL מלא
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 2. צילומי מסך וּוידאו
 
@@ -56,7 +66,11 @@ FitShare עונה על שתיהן עם דבר אחד: פיד של אימונים
 
 **וידאו הדגמה:** `להוסיף קישור כאן`
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 3. ארכיטקטורה
 
@@ -64,6 +78,8 @@ MVVM בארבע שכבות, בלי Hilt ובלי Dagger — ההזרקה נעש�
 כדי שאפשר יהיה לקרוא את כל החיווט מלמעלה למטה בישיבה אחת.
 
 ### זרימת נתונים
+
+</div>
 
 ```
                  ┌──────────────────────────────────────────────┐
@@ -99,6 +115,8 @@ MVVM בארבע שכבות, בלי Hilt ובלי Dagger — ההזרקה נעש�
                                      XML View
 ```
 
+<div dir="rtl" align="right">
+
 ### חוקי השכבות
 
 | שכבה | מותר לה | אסור לה |
@@ -115,6 +133,8 @@ MVVM בארבע שכבות, בלי Hilt ובלי Dagger — ההזרקה נעש�
 `MediatorLiveData` מקונן — קשה יותר לקריאה וקשה יותר להגנה.
 
 ### מבנה החבילות
+
+</div>
 
 ```
 com.roeiamor.fitshare/
@@ -133,6 +153,8 @@ com.roeiamor.fitshare/
                             Validators, NetworkMonitor, NetworkGuard, ThemePreferences
 ```
 
+<div dir="rtl" align="right">
+
 ### החלטות שכדאי להכיר
 
 - **מסך פרופיל אחד**, לא שניים. `ProfileFragment` מקבל `userId` שיכול להיות `null`: `null` פירושו
@@ -150,9 +172,15 @@ com.roeiamor.fitshare/
   הטאב — מה שגרם לניווט התחתון להפסיק לעבוד אחרי כניסה לאימון. הפירוט ב‑KDoc של
   `MainActivity.setUpBottomNavigation`.
 
+</div>
+
 ---
 
+<div dir="rtl" align="right">
+
 ## 4. ספריות: מה, למה, ואיפה
+
+</div>
 
 | ספרייה | גרסה | למה דווקא היא | איפה בקוד |
 |---|---|---|---|
@@ -178,9 +206,11 @@ com.roeiamor.fitshare/
 | `okhttp` | 5.4.0 | שכבת ה‑HTTP של Retrofit; מוצהרת במפורש כדי לשלוט ב‑timeouts | `ServiceLocator` |
 | `okhttp-logging-interceptor` | 5.4.0 | לוגים של בקשות ההעלאה בבילדים של דיבאג בלבד. חוסך שעות של דיבאג multipart | `ServiceLocator` |
 | `exifinterface` | 1.4.2 | קורא את תג הסיבוב של המצלמה, כדי שתמונה מצולמת לא תעלה מסובבת ב‑90° | `util/ImageCompressor.kt` |
-| `junit` | 4.13.2 | 51 בדיקות היחידה | `app/src/test/` |
+| `junit` | 4.13.2 | 55 בדיקות היחידה | `app/src/test/` |
 | `kotlinx-coroutines-test` | 1.10.2 | `runTest` לבדיקת קוד `suspend` | בדיקות היחידה |
 | `androidx-junit` + `espresso-core` | 1.3.0 / 3.7.0 | הבדיקה המכשירית היחידה על ה‑adapter | `app/src/androidTest/` |
+
+<div dir="rtl" align="right">
 
 **הוחלט במפורש לא להוסיף:** Hilt, Dagger, Koin, Compose, Room, WorkManager, Paging, Coil, Timber.
 
@@ -189,16 +219,26 @@ com.roeiamor.fitshare/
 הפרויקט נשאר על `compileSdk = 36`, כי רק `android-36.1` מותקן על מכונת הפיתוח.
 שתי ספריות הוחזרו אחורה כי הגרסאות החדשות שלהן מצהירות `minCompileSdk=37`:
 
+</div>
+
 | ספרייה | מוצמדת ל | החדשה |
 |---|---|---|
 | `androidx.core:core-ktx` | 1.18.0 | 1.19.0 |
 | `glide` | 5.0.7 | 5.0.9 |
 
+<div dir="rtl" align="right">
+
 אין להעלות אותן בלי לשנות את החלטת ה‑`compileSdk`.
+
+</div>
 
 ---
 
+<div dir="rtl" align="right">
+
 ## 5. מודל הנתונים ב‑Firestore
+
+</div>
 
 ```
 users/{uid}
@@ -213,6 +253,8 @@ workouts/{workoutId}
  ├── likes/{uid}          { uid, createdAt }
  └── comments/{commentId} { id, authorId, authorName, authorPhotoUrl?, text, createdAt }
 ```
+
+<div dir="rtl" align="right">
 
 | אוסף | שדה | טיפוס | הערות |
 |---|---|---|---|
@@ -251,7 +293,11 @@ workouts/{workoutId}
 "קטגוריה + `likesCount` יורד". שניהם מתועדים ב‑`firestore.indexes.json`. בפעם הראשונה שהשאילתה
 רצה בלי אינדקס, Firestore מדפיס ל‑Logcat קישור בלחיצה אחת שיוצר אותו.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 6. למה Cloudinary ולא Firebase Storage
 
@@ -263,12 +309,16 @@ Storage דורש היום את תוכנית **Blaze** בתשלום. בתוכני
 
 כדי שההחלטה הזו לא תתפשט לכל הקוד, ההעלאה יושבת מאחורי הפשטה:
 
+</div>
+
 ```kotlin
 interface ImageUploader {
     /** מעלה תמונה מקומית ומחזיר את הכתובת הציבורית שלה, או כישלון. */
     suspend fun upload(uri: Uri): Result<String>
 }
 ```
+
+<div dir="rtl" align="right">
 
 `CloudinaryImageUploader` הוא המימוש היחיד, והוא נוצר במקום אחד — `ServiceLocator`. אף `ViewModel`
 ואף `Fragment` לא יודעים ש‑Cloudinary קיים. אם הפרויקט יעבור מחר ל‑Blaze, המעבר ל‑Storage הוא
@@ -281,7 +331,11 @@ interface ImageUploader {
 - **preset לא‑חתום הוא ציבורי מעצם הגדרתו** — הוא מוטמע בכל אפליקציית לקוח שמשתמשת בו. זו לא
   דליפת סוד; כך Cloudinary תוכננה לעבוד עם לקוחות ניידים.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 7. הרצה מאפס
 
@@ -296,10 +350,14 @@ interface ImageUploader {
 
 **1. שכפול הפרויקט**
 
+</div>
+
 ```powershell
 git clone <repo-url>
 cd FitShare
 ```
+
+<div dir="rtl" align="right">
 
 **2. Firebase**
 
@@ -319,10 +377,14 @@ cd FitShare
 נרשמים ב‑<https://cloudinary.com> (חינם, בלי כרטיס), יוצרים **unsigned upload preset**,
 ומוסיפים ל‑`gradle.properties` בשורש הפרויקט:
 
+</div>
+
 ```properties
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
 ```
+
+<div dir="rtl" align="right">
 
 > אם אחד מהם חסר, הבילד **נכשל בזמן הקונפיגורציה** עם הודעה ברורה — במקום להיכשל בזמן ריצה עם
 > שגיאת Cloudinary סתומה.
@@ -334,17 +396,25 @@ CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
 
 **5. בנייה והרצה**
 
+</div>
+
 ```powershell
 .\gradlew.bat assembleDebug            # בנייה
 .\gradlew.bat installDebug             # התקנה על מכשיר מחובר
-.\gradlew.bat testDebugUnitTest        # 51 בדיקות יחידה (JVM)
+.\gradlew.bat testDebugUnitTest        # 55 בדיקות יחידה (JVM)
 .\gradlew.bat connectedDebugAndroidTest # 4 בדיקות מכשיריות (דורש מכשיר/אמולטור)
 .\gradlew.bat lintDebug                # דוח Lint
 ```
 
+<div dir="rtl" align="right">
+
 > ב‑PowerShell אין `&&`. משרשרים עם `;` או `cmd; if ($?) { cmd2 }`.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 8. חוקי האבטחה של Firestore
 
@@ -383,11 +453,15 @@ CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
 
 מריצים מהטרמינל, בלי טוקן הרשאה:
 
+</div>
+
 ```powershell
 $projectId = "<your-project-id>"
 curl.exe -s -o NUL -w "%{http_code}`n" `
   "https://firestore.googleapis.com/v1/projects/$projectId/databases/(default)/documents/workouts"
 ```
+
+<div dir="rtl" align="right">
 
 - **`403`** — החוקים פעילים. קריאה בלי הזדהות נדחית. ✅
 - **`200`** — עדיין test mode, החוקים לא התפרסמו. ❌
@@ -411,7 +485,11 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
 אם הפיד נשאר במצב טעינה או קופץ למצב שגיאה אחרי הפרסום — החוקים חוסמים משהו שהם לא צריכים
 לחסום, וה‑`PERMISSION_DENIED` יופיע ב‑Logcat תחת התג `Firestore`.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 9. מגבלות ידועות
 
@@ -454,12 +532,12 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
    מריצה collection‑group query על `favorites` לפי `workoutId` ומוחקת את כולן ב‑batch. פונקציות
    דורשות את תוכנית Blaze בתשלום, והפרויקט מחויב להישאר על Spark החינמית — אותה מגבלה בדיוק
    שמונעת אכיפה אמיתית של המונים (סעיף 1).
-8. **`workoutsCount` של חשבונות בדיקה לא תמיד מסונכרן.** מסמכי אימון שהוקלדו ידנית בקונסולת
+9. **`workoutsCount` של חשבונות בדיקה לא תמיד מסונכרן.** מסמכי אימון שהוקלדו ידנית בקונסולת
    Firebase עוקפים את ה‑`WriteBatch` שמתחזק את המונה. באפליקציה עצמה המונה תמיד נכון, כי הוא זז רק
    יחד עם המסמך שמצדיק אותו.
-9. **מסירת מייל איפוס הסיסמה לא אומתה** — כתובת הבדיקה היא דומיין `@example.com` שמור וללא תיבה.
+10. **מסירת מייל איפוס הסיסמה לא אומתה** — כתובת הבדיקה היא דומיין `@example.com` שמור וללא תיבה.
    מה שכן אומת: ש‑Firebase קיבלה את הבקשה והחזירה הצלחה.
-10. **חזרה לאפליקציה כשכבר אין חיבור לא מציגה באנר, עד שהחיבור חוזר ונופל שוב.**
+11. **חזרה לאפליקציה כשכבר אין חיבור לא מציגה באנר, עד שהחיבור חוזר ונופל שוב.**
 
     הבאנר מותנה בראיה: הוא מתחיל מוסתר, ורק `OFFLINE` שהגיע **אחרי** `ONLINE` שנצפה באותה
     האזנה עצמה מרים אותו. `repeatOnLifecycle` פותח האזנה חדשה בכל חזרה לאפליקציה, ולכן הראיה
@@ -503,14 +581,18 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
    הבאנר, ורק אחרי שהוא נמשך שנייה וחצי. **ההסתרה נשארה מיידית**, וההגנה על כתיבות לא נגעה: 
    `NetworkGuard` עדיין שואל את `isOnline` ישירות ועדיין מסרב מיד. שנייה וחצי לבדה לא סגרה את
    הבאנר בחזרה לאפליקציה, ולכן נוספה מעליה שכבה ראשונה: `OFFLINE` מרים את הבאנר רק אם נצפה
-   `ONLINE` לפניו באותה האזנה. ההשהיה נשארה מאחוריה לניתוקים באמצע שימוש — ראה מגבלה 10.
+   `ONLINE` לפניו באותה האזנה. ההשהיה נשארה מאחוריה לניתוקים באמצע שימוש — ראה מגבלה 11.
 8. **`NavigationUI.setupWithNavController` מניח שהטאבים הם גרפים מקוננים, ונכשל בשקט כשלא.** מול
    גרף שטוח הוא מנווט כל הקשה על טאב עם `popUpTo(startDestination) { saveState = true }` **וגם**
    `restoreState = true`, ולכן עבור הטאב שהוא גם יעד ההתחלה של הגרף — הוא שומר את המסך שמעליו
    ומשחזר אותו באותה קריאה. no‑op מובטח, בלי חריגה ובלי שום דבר בלוג. ניתן לשחזור רק על ידי קריאת
    ה‑back stack לפני ההקשה ואחריה.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 10. בדיקות
 
@@ -523,7 +605,11 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
 משאבי המחרוזות והריבוי, והיררכיית View שאפשר ללחוץ עליה. בדיקת JVM הייתה צריכה להחליף את שלושתם
 ב‑fakes, ואז לבדוק את ה‑fakes.
 
+</div>
+
 ---
+
+<div dir="rtl" align="right">
 
 ## 11. מסמכים נוספים ברפוזיטורי
 
@@ -543,3 +629,6 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
 מתוך אפיון כתוב, וההסבר עצמו תמיד מופיע בתוך ההערה ולא רק בהפניה. אותו דבר לגבי כמה הפניות
 ל‑`CLAUDE.md`, שהיה מסמך כללי העבודה על הפרויקט. **המסמך הזה, README, הוא מקור האמת שנשאר**:
 מבנה השכבות בסעיף 3, הספריות בסעיף 4, מודל הנתונים בסעיף 5, והמגבלות בסעיף 9.
+
+</div>
+
