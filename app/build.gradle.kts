@@ -97,9 +97,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Single-Activity navigation
+    // Single-Activity navigation. navigation-ui is deliberately absent: the bottom bar is wired by
+    // hand in MainActivity.setUpBottomNavigation, and navOptions {} comes from navigation-common,
+    // which this pulls in transitively.
     implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
 
     // Firebase - the BOM aligns every module to one compatible set
     implementation(platform(libs.firebase.bom))
