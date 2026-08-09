@@ -72,7 +72,8 @@ FitShare עונה על שתיהן עם דבר אחד: פיד של אימונים
 |---|---|
 | ![מסך פרטי אימון במצב בהיר](docs/screenshots/details_light.png) | ![מסך פרטי אימון במצב כהה](docs/screenshots/details_dark.png) |
 
-**וידאו הדגמה:** `להוסיף קישור כאן`
+> **וידאו הדגמה — למילוי אחרי ההקלטה:** `להוסיף כאן את הקישור`
+> עד אז, הקישור נמצא בראש המסמך.
 
 </div>
 
@@ -132,7 +133,14 @@ MVVM בארבע שכבות, בלי Hilt ובלי Dagger — ההזרקה נעש�
 | `Fragment` | לנפח layout, להאזין ל‑`LiveData`, לצייר מצב, להעביר אירועים ל‑ViewModel | קריאות Firebase, לוגיקה עסקית |
 | `ViewModel` | `viewModelScope`, לחבר זרם חי עם מצב מסך, לחשוף `LiveData` | לגעת ב‑`View`, ב‑`Context` או ב‑`Fragment` |
 | `Repository` | ממשק + מימוש אחד, מחזיר `Result<T>` או `Flow<Result<T>>` | להיחשף כמחלקה קונקרטית ל‑ViewModel |
-| `DataSource` | להכיר את Firestore / Retrofit | לזלוג החוצה — אף שכבה אחרת לא מייבאת Firebase |
+| `DataSource` | להכיר את Firestore / Retrofit — שאילתות, מאזינים, טרנזקציות, multipart | לזלוג החוצה: אף `ViewModel` ואף `Fragment` לא מייבא Firebase |
+
+**איפה `com.google.firebase` כן מופיע מחוץ ל‑`data/remote`, ולמה.** שלושה מקומות, כולם מכוונים:
+`data/model/` מייבא `Timestamp` ו‑`@ServerTimestamp`, כי בלעדיהם Firestore לא יודעת למפות את המסמך;
+`di/ServiceLocator` בונה פעם אחת את `FirebaseAuth` ו‑`FirebaseFirestore`; ו‑`util/ErrorMapper` יחד עם
+`ui/common/TimeLabels` מקבלים חריגה או `Timestamp` כדי לתרגם אותם לעברית. מה ש**לא** יוצא מ‑`data/remote`
+הוא ה‑API עצמו — שאילתות, `snapshotListener`, `runTransaction`, `WriteBatch`. בכל תיקיית `ui/` יש בדיוק
+קובץ אחד שמייבא Firebase, `TimeLabels.kt`, ולא אף `ViewModel` ולא אף `Fragment`.
 
 **זרמים חיים** מוחזרים מה‑Repository כ‑`Flow<Result<T>>` (מאזין Firestore עטוף ב‑`callbackFlow`).
 ה‑ViewModel מחבר את הזרם עם מצב המסך — סינון, חיפוש, מיון — ומסיים ב‑`.asLiveData()`.
@@ -155,10 +163,12 @@ com.roeiamor.fitshare/
 ├── di/                     ServiceLocator, ViewModelFactory
 ├── ui/
 │   ├── auth/  feed/  addworkout/  details/  favorites/  profile/
-│   └── common/             BaseFragment, StateRenderer, LikeButton,
-│                           EnumLabels, TimeLabels, NumberLabels, MetaChips
-└── util/                   Result, ErrorMapper, TimeFormatter, ImageCompressor,
-                            Validators, NetworkMonitor, NetworkGuard, ThemePreferences
+│   └── common/             BaseFragment, StateRenderer, LikeButton, ChipBuilder,
+│                           FormKeyboardSupport, EnumLabels, TimeLabels,
+│                           NumberLabels, MetaChips
+└── util/                   SafeCall, ErrorMapper, Event, Validators, TimeFormatter,
+                            ImageCompressor, ViewExtensions, NetworkMonitor,
+                            NetworkGuard, ThemePreferences
 ```
 
 <div dir="rtl" align="right">
@@ -195,9 +205,11 @@ com.roeiamor.fitshare/
 | `firebase-auth` | BOM 34.17.0 | רכיב שרת #1. הרשמה, התחברות, איפוס סיסמה וסשן מתמיד — בחינם וללא הגבלה | `AuthDataSource`, מסכי `ui/auth` |
 | `firebase-firestore` | BOM 34.17.0 | רכיב שרת #2. כל מודל הנתונים, עם מאזינים בזמן אמת ו‑`runTransaction` למונים | `WorkoutDataSource`, `InteractionDataSource`, `UserDataSource` |
 | `firebase-bom` | 34.17.0 | מיישר את כל גרסאות Firebase לסט תואם אחד, כך שהמודולים מוצהרים בלי גרסה | `app/build.gradle.kts` |
+| `kotlinx-coroutines-android` | 1.10.2 | הליבה של הקורוטינות, עם ה‑`Dispatchers.Main` של אנדרואיד — הבסיס של `viewModelScope` ושל כל `suspend` בפרויקט | כל השכבות |
 | `kotlinx-coroutines-play-services` | 1.10.2 | נותן `await()` שהופך `Task<T>` של Firebase לקריאת `suspend`. בלעדיו חוזרים ל‑callbacks מקוננים | כל ה‑DataSources |
+| `appcompat` | 1.7.1 | `AppCompatActivity`, ו‑`AppCompatDelegate` שמחזיק את שני המתגים הגלובליים: מצב כהה/בהיר ונעילת השפה לעברית | `MainActivity`, `ThemePreferences` |
 | `navigation-fragment-ktx` | 2.9.8 | NavHost והחלפת הפרגמנטים — הבסיס לארכיטקטורת ה‑Activity היחיד | `MainActivity`, `nav_graph.xml` |
-| `navigation-ui-ktx` | 2.9.8 | נשאר בפרויקט בשביל `NavOptions` ו‑`navOptions {}`; החיווט של הבר עצמו נכתב ביד (ראה §3) | `MainActivity` |
+| `navigation-ui-ktx` | 2.9.8 | **מוצהרת אך כבר לא בשימוש בקוד.** נשארה מהתקופה שבה הניווט התחתון חוּוט דרך `NavigationUI.setupWithNavController`; מאז הוא נכתב ביד (ראה §3), ואף קובץ לא מייבא `androidx.navigation.ui`. הסרתה היא שינוי בילד, שנדחה במכוון בהקפאת הקוד | — |
 | `navigation.safeargs.kotlin` | 2.9.8 | מייצר מחלקות Args/Directions מהגרף. בלעדיו ארגומנטים נוסעים כמחרוזות ב‑Bundle — מקור קלאסי לקריסות | `WorkoutDetailsFragmentArgs`, `ProfileFragmentArgs` |
 | `lifecycle-viewmodel-ktx` | 2.11.0 | `viewModelScope` — קורוטינות שמתבטלות לבד כשה‑ViewModel מת. ההגנה המרכזית מקריסות בסיבוב מסך | כל ה‑ViewModels |
 | `lifecycle-livedata-ktx` | 2.11.0 | `LiveData` ו‑`asLiveData()` להמרת ה‑`callbackFlow` של Firestore | `FeedViewModel`, `WorkoutDetailsViewModel` |
@@ -349,8 +361,13 @@ interface ImageUploader {
 
 ### דרישות
 
-- Android Studio (Ladybug ומעלה) עם **Android SDK Platform 36** מותקן
-- JDK 17 ומעלה (מגיע עם Android Studio)
+- Android Studio בגרסה שתומכת ב‑**AGP 9.2.1**. גרסה ישנה יותר תסרב לסנכרן את הפרויקט; בנייה משורת
+  הפקודה דרך ה‑wrapper אינה תלויה בגרסת ה‑IDE כלל
+- **Android SDK Platform 36.1** מותקן — לא 36 בלבד. הפרויקט מצהיר
+  `compileSdk { version = release(36) { minorApiLevel = 1 } }`, כלומר `android-36.1`
+- **JDK 21.** ה‑daemon של Gradle מוצמד לגרסה הזו ב‑`gradle/gradle-daemon-jvm.properties`
+  (`toolchainVersion=21`), וה‑JBR שמגיע עם Android Studio מספק אותה
+- Gradle 9.4.1 — יורד לבד דרך ה‑wrapper, אין מה להתקין
 - מכשיר פיזי או אמולטור עם **API 24 ומעלה**
 - Windows + PowerShell (המכונה שעליה פותח הפרויקט); ב‑macOS/Linux החליפו `.\gradlew.bat` ב‑`./gradlew`
 
@@ -382,8 +399,12 @@ cd FitShare
 
 **3. Cloudinary**
 
-נרשמים ב‑<https://cloudinary.com> (חינם, בלי כרטיס), יוצרים **unsigned upload preset**,
-ומוסיפים ל‑`gradle.properties` בשורש הפרויקט:
+**אין מה לעשות בשלב הזה.** בדיוק כמו `google-services.json`, גם שני הערכים של Cloudinary
+**מגוּרסים בכוונה** ב‑`gradle.properties` שבשורש הפרויקט, כדי שהבודק יוכל לבנות ולפרסם אימון עם
+תמונה בלי להירשם לשום שירות. preset לא‑חתום הוא ציבורי מעצם הגדרתו (§6), ולכן זו לא דליפת סוד.
+
+מי שרוצה בכל זאת חשבון משלו: נרשמים ב‑<https://cloudinary.com> (חינם, בלי כרטיס), יוצרים
+**unsigned upload preset**, ומחליפים את שתי השורות האלה ב‑`gradle.properties`:
 
 </div>
 
@@ -540,12 +561,25 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
    מריצה collection‑group query על `favorites` לפי `workoutId` ומוחקת את כולן ב‑batch. פונקציות
    דורשות את תוכנית Blaze בתשלום, והפרויקט מחויב להישאר על Spark החינמית — אותה מגבלה בדיוק
    שמונעת אכיפה אמיתית של המונים (סעיף 1).
-9. **`workoutsCount` של חשבונות בדיקה לא תמיד מסונכרן.** מסמכי אימון שהוקלדו ידנית בקונסולת
-   Firebase עוקפים את ה‑`WriteBatch` שמתחזק את המונה. באפליקציה עצמה המונה תמיד נכון, כי הוא זז רק
-   יחד עם המסמך שמצדיק אותו.
-10. **מסירת מייל איפוס הסיסמה לא אומתה** — כתובת הבדיקה היא דומיין `@example.com` שמור וללא תיבה.
-   מה שכן אומת: ש‑Firebase קיבלה את הבקשה והחזירה הצלחה.
-11. **חזרה לאפליקציה כשכבר אין חיבור לא מציגה באנר, עד שהחיבור חוזר ונופל שוב.**
+9. **המונים מתוחזקים על ידי האפליקציה בלבד, וכתיבה שעוקפת אותה עוקפת גם אותם.** מסמך אימון שמוקלד
+   ידנית בקונסולת Firebase לא עובר ב‑`WriteBatch` שמגדיל את `workoutsCount`, ולכן מפריד בין המונה
+   למספר האמיתי. זה קרה בפועל בזמן הפיתוח ותוקן לפני המסירה: סקריפט אימות סופר כל מסמך ב‑`likes`
+   וב‑`comments` ומשווה לשדה שלצידו, ועובר היום על **26 מתוך 26 אימונים** (92 לייקים, 37 תגובות),
+   וגם על מסמכי המשתמשים. באפליקציה עצמה המונה תמיד נכון, כי הוא זז רק בתוך אותה טרנזקציה כמו
+   המסמך שמצדיק אותו — אכיפה אמיתית מול כתיבה חיצונית תדרוש Cloud Functions (סעיף 1).
+10. **מסירת מייל איפוס הסיסמה לא אומתה בתיבה אמיתית.** הבדיקה נעשתה מול כתובת בדומיין
+    `@example.com` — דומיין שמור, שאין לו תיבת דואר — והחשבון הזה כבר נמחק מאז. מה שאומת: ש‑Firebase
+    קיבלה את הבקשה והחזירה הצלחה, ושמסך "שכחתי סיסמה" מטפל נכון בכל מסלולי הכישלון.
+11. **המעבר בין כהה לבהיר משאיר מסך שחור לכ‑1.2 שניות.** החלפת ערכת נושא מפעילה
+    `AppCompatDelegate.setDefaultNightMode`, שמריץ מחדש את ה‑Activity. הפער נמדד ב‑`screenrecord`
+    ולא בעין: במקור הוא היה **2.42 שניות**, כי `forceHebrewLocale` קרא ל‑`setApplicationLocales`
+    ללא תנאי ומתחת ל‑API 33 גם זה מריץ מחדש את ה‑Activity — כלומר שתי הרצות מחדש ברצף. הוספת התנאי
+    ו‑`android:windowBackground` מפורש חתכו את זה לכ‑1.2 שניות. **מה שנשאר הוא הרצה מחדש אחת**,
+    ובזמן הזה גם שורת הסטטוס וגם סרגל הניווט של המערכת שחורים, כך שאין שום דבר שהאפליקציה יכולה
+    לצייר מעליו — נבדק עם `windowBackground` בצבע מגנטה, והחלון פשוט אינו קיים באותו רגע. לסגור את
+    הפער לגמרי פירושו לא להריץ את ה‑Activity מחדש בכלל, כלומר לנפח מחדש את כל עץ ה‑Views בתוך
+    Activity חיה. נדחה במכוון כשינוי אחרון לפני מסירה.
+12. **חזרה לאפליקציה כשכבר אין חיבור לא מציגה באנר, עד שהחיבור חוזר ונופל שוב.**
 
     הבאנר מותנה בראיה: הוא מתחיל מוסתר, ורק `OFFLINE` שהגיע **אחרי** `ONLINE` שנצפה באותה
     האזנה עצמה מרים אותו. `repeatOnLifecycle` פותח האזנה חדשה בכל חזרה לאפליקציה, ולכן הראיה
@@ -564,7 +598,7 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
     לא הציגו את הבאנר אף פעם, וארבעה טוגלים של מצב טיסה עם האפליקציה פתוחה הציגו אותו בכל פעם —
     אחרי 3.5, 3.8, 4.1 ו‑4.1 שניות.
 
-### שבע הבעיות שעלו באמת בדרך — לספר עליהן
+### שמונה הבעיות שעלו באמת בדרך — לספר עליהן
 
 1. **`setApplicationLocales` הוא no‑op שקט ב‑`Application.onCreate` מ‑API 33.** AppCompat מעביר את
    הקריאה ל‑`LocaleManager` של המערכת דרך delegate של Activity פעיל, ובשלב הזה עוד אין כזה. בלי
@@ -589,7 +623,7 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
    הבאנר, ורק אחרי שהוא נמשך שנייה וחצי. **ההסתרה נשארה מיידית**, וההגנה על כתיבות לא נגעה: 
    `NetworkGuard` עדיין שואל את `isOnline` ישירות ועדיין מסרב מיד. שנייה וחצי לבדה לא סגרה את
    הבאנר בחזרה לאפליקציה, ולכן נוספה מעליה שכבה ראשונה: `OFFLINE` מרים את הבאנר רק אם נצפה
-   `ONLINE` לפניו באותה האזנה. ההשהיה נשארה מאחוריה לניתוקים באמצע שימוש — ראה מגבלה 11.
+   `ONLINE` לפניו באותה האזנה. ההשהיה נשארה מאחוריה לניתוקים באמצע שימוש — ראה מגבלה 12.
 8. **`NavigationUI.setupWithNavController` מניח שהטאבים הם גרפים מקוננים, ונכשל בשקט כשלא.** מול
    גרף שטוח הוא מנווט כל הקשה על טאב עם `popUpTo(startDestination) { saveState = true }` **וגם**
    `restoreState = true`, ולכן עבור הטאב שהוא גם יעד ההתחלה של הגרף — הוא שומר את המסך שמעליו
@@ -632,8 +666,18 @@ curl.exe -s -o NUL -w "%{http_code}`n" `
 הקוד מפנה במקומות רבים ל‑**"SPEC section N"** — למשל "ארבעת המצבים מ‑SPEC section 5" או
 "רמת הניגודיות שדורש SPEC section 7". ההפניות האלה הן ל**מסמך האפיון**, שהיה קובץ עבודה
 (`SPEC.md`) ואינו חלק מהמסירה. הן נשארו בכוונה: הן מתעדות שההחלטה לא נלקחה בשרירותיות אלא
-מתוך אפיון כתוב, וההסבר עצמו תמיד מופיע בתוך ההערה ולא רק בהפניה. אותו דבר לגבי כמה הפניות
-ל‑`CLAUDE.md`, שהיה מסמך כללי העבודה על הפרויקט. **המסמך הזה, README, הוא מקור האמת שנשאר**:
+מתוך אפיון כתוב, וההסבר עצמו תמיד מופיע בתוך ההערה ולא רק בהפניה.
+
+באותו אופן, ולאותה סיבה, מופיעות בקוד הפניות לעוד שלושה קבצי עבודה שאינם ברפוזיטורי:
+
+| הפניה | מה זה היה | איפה |
+|---|---|---|
+| `PHASE0_PLAN.md section 4.X` | מסמך התכנון, שבו הוכרעו תשע החלטות ארכיטקטורה לפני שנכתבה שורת קוד | 6 הפניות, למשל `EnumLabels.kt`, `FeedViewModel.kt`, `ProfileFragment.kt` |
+| `CLAUDE.md` | כללי העבודה על הפרויקט, כולל החלטת ה‑`compileSdk` | `libs.versions.toml`, `app/build.gradle.kts` |
+| `NAV_UI_FIXES.md` | דוח עבודה על תיקוני הניווט | `menu_bottom_nav.xml` |
+
+בכל אחד מהמקומות האלה ההסבר עצמו כתוב בהערה במלואו, וההפניה היא רק לתיעוד ההחלטה — אין שום דבר
+שהקורא צריך את הקובץ החסר כדי להבין. **המסמך הזה, README, הוא מקור האמת שנשאר**:
 מבנה השכבות בסעיף 3, הספריות בסעיף 4, מודל הנתונים בסעיף 5, והמגבלות בסעיף 9.
 
 </div>

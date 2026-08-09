@@ -990,54 +990,19 @@ the tile is on screen in real data, not only in a test.
 
 ---
 
-## A sign-in form inside the add-workout screen — OPEN, not reproduced, not fixed
+## The navigation graph was rebuilt on every `onCreate` — a latent defect, found and fixed
 
-**This section is deliberately not written as a solved bug.** A real defect was found next to it and
-has been fixed, and that fix is described below - but nobody has seen the reported symptom since, and
-nothing here should be read as proof that it is gone.
+**How it came to light, and why there is no bug report attached to it.** A symptom was reported on
+the add-workout form: after picking a second photo, the login screen's email and password fields
+appeared inside the form and the new photo looked like it had failed to load. It was investigated as
+a live defect, and it was not one. The image being used as the workout photo was **a screenshot of
+the app itself**, taken on the login screen. So the email and password fields on screen were part of
+that picture, and the photo that appeared not to have loaded had in fact loaded perfectly - it was
+the screenshot. That accounts for the whole report: why two screens seemed to render at once, why
+the photo seemed missing, and why it stopped appearing with no code change in between. **There was
+no defect in the app**, and none is recorded here.
 
-**Reported by Roei.** On the add-workout form: pick a photo, tap **שינוי תמונה**, pick a second one.
-The new photo did not load, and the login screen's **email and password fields appeared inside the
-add-workout screen, below the title** - two destinations rendered at once. It happened **every time**,
-with a signed-in session.
-
-**It stopped reproducing before it could be caught.** Roei retested a short time later and could not
-reproduce it; neither could I. **No code changed in between.** So it was not fixed by anything - it
-simply stopped appearing, which is the least satisfying state a bug can be in and the reason this
-section exists.
-
-### What was tried, and what each attempt ruled out
-
-Every row here ran on the **unfixed** build, which is what makes them worth recording: the defect
-described below was present the whole time and none of these forced it to misbehave.
-
-| forced condition | result |
-|---|---|
-| Activity recreation, **Don't keep activities** on, add form on screen | form restored intact, no login fields |
-| process killed with `am kill` while backgrounded, returned through recents | form restored, typed title preserved, no login fields |
-| logcat across all of the above | no crash, no `FragmentManager` and no `Navigation` warning |
-
-The reported flow itself **could not be driven from adb**: DocumentsUI would not accept synthetic
-taps on this device that day - grid and list view, `tap` and press-and-hold, integer coordinates,
-item bounds read from the hierarchy - although taps registered fine on its own menus, and the same
-technique had selected a photo the day before. So the second pick was never reached by automation,
-and the symptom was never observed first-hand.
-
-**One hypothesis is positively disproved rather than merely untested.** The suspicion that the picker
-callback was lost to a recreated Activity - which would have explained the photo not loading - does
-not hold: all three contracts in `AddWorkoutFragment` are `registerForActivityResult` **field
-initializers** (`pickImage`, `takePicture`, `requestCameraPermission`), which is the documented
-pattern precisely because a fragment re-registers them on every recreation. A restored Activity
-cannot deliver that result to a stale instance.
-
-**A note on method, because it cost time twice.** `uiautomator dump` is not a reliable witness here.
-It omits nodes that are off-screen, so a card clipped under a sticky header looks identical to one
-whose view is `GONE`; and it returned stale content at least once, reporting the feed while the
-screen actually showed the login form. Both times a screenshot settled it. Any conclusion in this
-area drawn from a dump alone should be confirmed against a screenshot before it is believed.
-
-### The real defect found in that area, which is fixed
-
+**What the investigation did turn up is unrelated to that report**, and stands on its own.
 `MainActivity.setUpNavigation` ran from `onCreate` with no `savedInstanceState` guard and did this
 every single time, including on a rotation, a return from the picker, and a process restored from its
 saved state:
@@ -1054,13 +1019,8 @@ that has restored its own back stack, and assigning a freshly inflated graph ove
 away and can navigate somewhere the user never asked to go. And the value it recomputes from is read
 **synchronously**: a restoring process can answer null for a user who is in fact signed in, so the
 recomputation could resolve to `loginFragment` while the user's real screen was still on the stack.
-That is the exact shape of the reported symptom, which is why it was worth fixing on its own merits
-whether or not it was the cause.
-
-**It is not claimed as the cause, and the table above is why.** That defect was in the build those
-three forced conditions ran against. Recreation and process death both restored correctly *with the
-bug still present*, so nothing here demonstrates it producing the reported screen. It is a real fault
-that was found while looking for another one, and it is fixed; that is the whole claim.
+Building the graph and re-deciding the start destination on every `onCreate` is wrong on its own
+terms, whatever anybody had reported: neither of those two faults needs a symptom to justify closing.
 
 **The fix.** The graph is built once per task, from the first `onCreate` only. A recreation now
 re-attaches the listeners and lets the restored state stand. The resolved start destination is
@@ -1074,27 +1034,10 @@ started with instead of asking `FirebaseAuth` again.
 |---|---|
 | cold start, signed in | feed |
 | cold start, signed out (emulator, fresh install, no session) | login |
-| rotation mid-form, portrait to landscape and back | form kept, typed title intact, no login fields |
-| process killed **while the photo picker was in the foreground**, then Back | form restored, typed title intact, no login fields |
+| rotation mid-form, portrait to landscape and back | form kept, typed title intact |
+| process killed **while the photo picker was in the foreground**, then Back | form restored, typed title intact |
 
-The last row is the closest deterministic stand-in for the reported flow that could be produced on
-demand, and it is the one the fix is aimed at.
+The last two rows are the ones the fix is aimed at: both are recreations that used to rebuild the
+graph and re-read `FirebaseAuth`, and both now let the restored back stack stand.
 
-**What is still unexplained.** Three things, and they are the reason this section stays open:
-
-1. **Why two destinations rendered at once.** `FragmentNavigator` *replaces* the fragment in the
-   container; it does not stack them. Nothing found so far accounts for the add form and the login
-   form being on screen together, which is the part that makes a simple "it navigated to the wrong
-   destination" explanation insufficient.
-2. **Why the second photo failed to load in the same moment** - and, given the disproof above, not
-   because the picker result went to a stale callback.
-3. **Why it reproduced every single time and then stopped**, with no code change in between.
-
-**If it comes back, capture this before touching anything:**
-
-- `adb logcat -d > bug.txt` immediately - a stack trace, or a `FragmentManager` or `Navigation`
-  warning, would settle the mechanism in one read.
-- Whether the add form is still **underneath** the login fields or has been **replaced** by them.
-  That single observation separates "two fragments in one container" from "navigated away".
-- Whether the app had been backgrounded a long time first, and whether the device was low on memory -
-  the conditions that decide whether the process was restored rather than merely recreated.
+This entry is closed. Nothing about it is open or unexplained.
