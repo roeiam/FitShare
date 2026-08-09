@@ -105,9 +105,9 @@ FitShare עונה על שתיהן עם דבר אחד: פיד של אימונים
 |---|---|
 | ![מסך פרטי אימון במצב בהיר](docs/screenshots/details_light.png) | ![מסך פרטי אימון במצב כהה](docs/screenshots/details_dark.png) |
 
-> **וידאו הדגמה — למילוי אחרי ההקלטה:** `להוסיף כאן את הקישור`
+> **וידאו הדגמה:** <https://drive.google.com/file/d/1Muo10UHcjEPiGLd0Hj2joftY4A6ZBVgg/view?usp=sharing>
 >
-> זהו המקום היחיד במסמך שבו הקישור מופיע, כדי שיהיה רק מקום אחד לעדכן.
+> זהו המקום היחיד במסמך שבו הקישור מופיע.
 
 </div>
 
